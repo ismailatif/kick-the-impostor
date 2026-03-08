@@ -96,6 +96,7 @@ io.on('connection', (socket) => {
         if (room && room.hostId === socket.id) {
             room.status = 'playing';
             room.gameData = gameData; // { secretWord, impostorIndices, category }
+            room.votes = {};
 
             // Send individual roles privately
             room.players.forEach((player, index) => {
@@ -120,8 +121,65 @@ io.on('connection', (socket) => {
     socket.on('submit-vote', ({ code, votedIndex }) => {
         const room = rooms.get(code);
         if (room && room.status === 'playing') {
-            // Logic for collecting votes and broadcasting result
+            if (!room.votes) {
+                room.votes = {};
+            }
+
+            // Record the vote by socket id (one vote per player)
+            room.votes[socket.id] = votedIndex;
+
+            const totalPlayers = room.players.length;
+            const votesCount = Object.keys(room.votes).length;
+
+            // Broadcast that this player's vote was recorded
             io.to(code).emit('vote-recorded', { playerId: socket.id, votedIndex });
+
+            // If everyone has voted, calculate results and broadcast them
+            if (votesCount === totalPlayers && room.gameData) {
+                const tally = {};
+                Object.values(room.votes).forEach((idx) => {
+                    if (typeof idx === 'number') {
+                        tally[idx] = (tally[idx] || 0) + 1;
+                    }
+                });
+
+                const impostorIndices = room.gameData.impostorIndices || [];
+                const impostorNames = impostorIndices
+                    .map((i) => room.players[i]?.name)
+                    .filter(Boolean);
+
+                let maxVotes = 0;
+                let mostVotedIndices = [];
+                Object.entries(tally).forEach(([idx, count]) => {
+                    const countNum = Number(count);
+                    const idxNum = Number(idx);
+                    if (countNum > maxVotes) {
+                        maxVotes = countNum;
+                        mostVotedIndices = [idxNum];
+                    } else if (countNum === maxVotes) {
+                        mostVotedIndices.push(idxNum);
+                    }
+                });
+
+                const impostorCaught = mostVotedIndices.some((idx) =>
+                    impostorIndices.includes(idx)
+                );
+
+                room.status = 'result';
+
+                const resultPayload = {
+                    tally,
+                    mostVotedIndices,
+                    impostorIndices,
+                    impostorNames,
+                    impostorCaught,
+                    players: room.players.map((p) => p.name),
+                    secretWord: room.gameData.secretWord,
+                    category: room.gameData.category,
+                };
+
+                io.to(code).emit('vote-results', resultPayload);
+            }
         }
     });
 

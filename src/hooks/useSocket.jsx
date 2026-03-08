@@ -12,6 +12,7 @@ export const SocketProvider = ({ children }) => {
     const [onlinePhase, setOnlinePhase] = useState(null);
     const [onlineGameData, setOnlineGameData] = useState(null);
     const [votedPlayers, setVotedPlayers] = useState([]);
+    const [voteResults, setVoteResults] = useState(null);
 
     useEffect(() => {
         // In production this would be an env var
@@ -37,6 +38,11 @@ export const SocketProvider = ({ children }) => {
 
         newSocket.on('vote-recorded', ({ playerId }) => {
             setVotedPlayers(prev => [...prev, playerId]);
+        });
+
+        newSocket.on('vote-results', (data) => {
+            setVoteResults(data);
+            setOnlinePhase('result');
         });
 
         newSocket.on('error', (msg) => {
@@ -81,6 +87,7 @@ export const SocketProvider = ({ children }) => {
             onlinePhase,
             onlineGameData,
             votedPlayers,
+            voteResults,
             createRoom,
             joinRoom,
             updateSettings,
