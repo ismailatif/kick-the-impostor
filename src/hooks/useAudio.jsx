@@ -41,10 +41,10 @@ export const AudioProvider = ({ children }) => {
 
     // SFX Synth System
     const playTone = useCallback((frequency, type, duration, vol = 0.1) => {
-        if (isMuted || !audioCtxRef.current) return;
+        if (isMuted || !audioCtxRef.current || audioCtxRef.current.state === 'closed') return;
 
         if (audioCtxRef.current.state === 'suspended') {
-            audioCtxRef.current.resume();
+            audioCtxRef.current.resume().catch(e => console.warn("Failed to resume AudioContext", e));
         }
 
         const oscillator = audioCtxRef.current.createOscillator();
@@ -73,15 +73,27 @@ export const AudioProvider = ({ children }) => {
             setTimeout(() => playTone(783.99, 'sine', 0.6, 0.05), 200); // G5
         },
         tick: () => playTone(1000, 'square', 0.02, 0.02),
-        error: () => playTone(150, 'sawtooth', 0.3, 0.05),
+        error: () => playTone(150, 'sawtooth', 0.4, 0.1),
+        reveal: () => {
+            if (isMuted) return;
+            playTone(200, 'sawtooth', 0.1, 0.05);
+            setTimeout(() => playTone(400, 'sawtooth', 0.3, 0.08), 50);
+        },
+        vote: () => playTone(300, 'triangle', 0.1, 0.05),
+        suspense: () => playTone(60, 'sine', 1.0, 0.1),
+        vibrate: () => {
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
     };
 
     // Crossfade BGM System
     const playBGM = useCallback((type) => { // 'lobby' | 'suspense' | 'none'
-        if (isMuted) return;
+        if (isMuted || !audioCtxRef.current || audioCtxRef.current.state === 'closed') return;
 
-        if (audioCtxRef.current?.state === 'suspended') {
-            audioCtxRef.current.resume();
+        if (audioCtxRef.current.state === 'suspended') {
+            audioCtxRef.current.resume().catch(e => console.warn("Failed to resume AudioContext", e));
         }
 
         const fadeOut = (audioEl) => {
@@ -131,8 +143,10 @@ export const AudioProvider = ({ children }) => {
         currentBgmRef.current = targetAudio;
     }, [isMuted]);
 
+    const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
+
     return (
-        <AudioContext.Provider value={{ sfx, playBGM, isMuted, setIsMuted }}>
+        <AudioContext.Provider value={{ sfx, playBGM, isMuted, setIsMuted, toggleMute }}>
             {children}
         </AudioContext.Provider>
     );

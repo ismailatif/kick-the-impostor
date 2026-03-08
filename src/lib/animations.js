@@ -48,3 +48,30 @@ export const pulseGlow = {
         repeat: Infinity
     }
 };
+
+export const shake = {
+    x: [0, -10, 10, -10, 10, 0],
+    transition: { duration: 0.4, ease: "easeInOut" }
+};
+
+export const breathing = {
+    scale: [1, 1.03, 1],
+    opacity: [0.7, 1, 0.7],
+    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+};
+
+export const flip = {
+    initial: { rotateY: 180, opacity: 0 },
+    animate: { rotateY: 0, opacity: 1 },
+    transition: { duration: 0.6, ease: "easeOut" }
+};
+
+export const revealCard = {
+    hidden: { filter: "blur(20px)", scale: 0.8, opacity: 0 },
+    visible: {
+        filter: "blur(0px)",
+        scale: 1,
+        opacity: 1,
+        transition: { type: "spring", stiffness: 260, damping: 20 }
+    }
+};

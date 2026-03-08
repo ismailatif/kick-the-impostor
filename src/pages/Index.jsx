@@ -7,7 +7,12 @@ import HowToPlay from "@/components/HowToPlay";
 import GameSetup from "@/components/GameSetup";
 import GamePlay from "@/components/GamePlay";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ModeSelection from "@/components/ModeSelection";
+import OnlineSetup from "@/components/online/OnlineSetup";
+import OnlineLobby from "@/components/online/OnlineLobby";
+import OnlineGamePlay from "@/components/online/OnlineGamePlay";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useSocket } from "@/hooks/useSocket";
 import { useAudio } from "@/hooks/useAudio";
 import { useTheme } from "next-themes";
 
@@ -18,6 +23,21 @@ const Index = () => {
   const { t } = useLanguage();
   const { sfx, playBGM, isMuted, setIsMuted } = useAudio();
   const { theme, setTheme } = useTheme();
+  const { room, onlinePhase } = useSocket();
+
+  // Watch for room changes to switch to lobby
+  useEffect(() => {
+    if (room && screen === "online-setup") {
+      setScreen("online-lobby");
+    }
+  }, [room, screen]);
+
+  // Watch for phase changes to switch to online play
+  useEffect(() => {
+    if (onlinePhase && screen === "online-lobby") {
+      setScreen("online-play");
+    }
+  }, [onlinePhase, screen]);
 
   // Ensure lobby bgm plays when returned to home if unmuted
   useEffect(() => {
@@ -31,7 +51,7 @@ const Index = () => {
   const handleStartClick = () => {
     sfx.click();
     playBGM('lobby');
-    setScreen("setup");
+    setScreen("mode-selection");
   };
 
   const handleHowToClick = () => {
@@ -50,12 +70,46 @@ const Index = () => {
       {screen === "setup" && (
         <motion.div key="setup" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
           <GameSetup
-            onBack={() => { sfx.click(); setScreen("home"); }}
+            onBack={() => { sfx.click(); setScreen("mode-selection"); }}
             onStart={(config) => {
               setGameConfig(config);
               setScreen("play");
             }}
           />
+        </motion.div>
+      )}
+
+      {screen === "mode-selection" && (
+        <motion.div key="mode-selection" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
+          <ModeSelection
+            onBack={() => { sfx.click(); setScreen("home"); }}
+            onSelect={(mode) => {
+              sfx.click();
+              if (mode === "local") {
+                setScreen("setup");
+              } else {
+                setScreen("online-setup");
+              }
+            }}
+          />
+        </motion.div>
+      )}
+
+      {screen === "online-setup" && (
+        <motion.div key="online-setup" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
+          <OnlineSetup onBack={() => { sfx.click(); setScreen("mode-selection"); }} />
+        </motion.div>
+      )}
+
+      {screen === "online-lobby" && (
+        <motion.div key="online-lobby" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
+          <OnlineLobby />
+        </motion.div>
+      )}
+
+      {screen === "online-play" && (
+        <motion.div key="online-play" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
+          <OnlineGamePlay onEnd={() => { sfx.click(); setScreen("home"); }} />
         </motion.div>
       )}
 
@@ -104,19 +158,19 @@ const Index = () => {
             <motion.button
               whileHover={hoverScale}
               onMouseEnter={() => sfx.hover()}
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleStartClick}
-              className="w-full glass-button py-4 rounded-2xl text-xl font-bold flex items-center justify-center gap-3">
-              <Play className="w-6 h-6" />
+              className="w-full glass-button py-4 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.5)] transition-shadow">
+              <Play className="w-6 h-6 fill-current" />
               {t("home.start")}
             </motion.button>
 
             <motion.button
               whileHover={hoverScale}
               onMouseEnter={() => sfx.hover()}
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleHowToClick}
-              className="w-full bg-card/80 backdrop-blur-sm text-foreground py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 shadow-game border border-white/20">
+              className="w-full bg-card/80 backdrop-blur-sm text-foreground py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 shadow-game border border-white/20 hover:border-primary/30 transition-colors">
               <HelpCircle className="w-5 h-5 text-primary" />
               {t("home.howToPlay")}
             </motion.button>

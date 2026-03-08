@@ -1,73 +1,61 @@
-# Welcome to your Lovable project
+# 🕵️ The Impostor (المحتال)
 
-## Project info
+**The Impostor** is a thrilling social deduction web game designed for groups of 3 to 20 players. Inspired by classic games like "Spyfall" and "Undercover", it tests your ability to describe a secret word without giving it away to the hidden impostors among you!
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## ✨ Key Features
 
-## How can I edit this code?
+- 🌍 **Multi-language Support**: Play in English, Arabic (RTL support), or French.
+- 👥 **3-20 Players**: Perfect for small gatherings or large parties.
+- 🛠️ **Configurable Settings**:
+  - Choose from multiple categories (Food, Countries, Animals, Sports, etc.).
+  - Adjust the number of impostors.
+  - Optional timer for faster-paced rounds.
+  - "Chaos Mode" for random impostor counts.
+  - "Impostor Hint" to help the impostor blend in.
+- 🌓 **Theme Support**: Seamlessly switch between Light and Dark modes.
+- 🎨 **Premium UI/UX**: Built with smooth animations using Framer Motion and a modern "glassmorphism" aesthetic.
+- 📱 **Mobile First**: Optimized for passing a single phone around the group.
 
-There are several ways of editing your application.
+## 🚀 Technologies Used
 
-**Use Lovable**
+- **React** (Vite)
+- **Tailwind CSS** for styling
+- **Framer Motion** for premium animations
+- **Lucide React** for icons
+- **Next-themes** for light/dark mode
+- **Sonner** for elegant toast notifications
+- **i18next** inspired custom localization system
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🎮 How to Play
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Setup**: Gather your friends (3-20 players), enter names, and choose your preferred categories and settings.
+2. **The Reveal**: Pass the device around. Each player long-presses to reveal their role.
+   - **Citizens**: Will see the "Secret Word".
+   - **Impostors**: Will see "You are the Impostor" (and potentially a category hint).
+3. **The Discussion**:
+   - Each player takes turns saying exactly **one word or short phrase** related to the secret word.
+   - Citizens must be vague enough to not tell the impostor the word, but clear enough to prove they know it.
+   - Impostors must guess the word from others' descriptions and mimic them to blend in.
+4. **Voting**: After the round, discuss who the impostor might be.
+5. **The Result**: Cast your votes! If the group correctly identifies all impostors, the Citizens win. If the impostors manage to stay hidden or win the vote, they take the victory!
 
-**Use your preferred IDE**
+## 🛠️ Local Development
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+To run this project locally:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Navigate to the project directory
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*Built with ❤️ for social fun.*

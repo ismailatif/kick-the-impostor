@@ -8,6 +8,7 @@ import { AudioProvider } from "@/hooks/useAudio";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { SocketProvider } from "@/hooks/useSocket";
 
 const queryClient = new QueryClient();
 
@@ -16,16 +17,18 @@ const App = () => (
     <AudioProvider>
       <ThemeProvider>
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
+          <SocketProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </SocketProvider>
         </LanguageProvider>
       </ThemeProvider>
     </AudioProvider>
