@@ -53,9 +53,21 @@ cd <YOUR_PROJECT_NAME>
 # Install dependencies
 npm install
 
+# Optional: configure the frontend socket server URL
+cp .env.example .env.local
+
 # Start the development server
 npm run dev
 ```
 
+### Frontend Environment Variables
+
+The frontend reads these Vite env vars:
+
+- `VITE_SOCKET_SERVER_URL`: Socket.IO server base URL used for online mode.
+
+If `VITE_SOCKET_SERVER_URL` is not set, the frontend falls back to the current page hostname on port `3001`.
+
 ---
 *Built with ❤️ for social fun.*
+

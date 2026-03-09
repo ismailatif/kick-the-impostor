@@ -3,6 +3,8 @@ import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 
 const SocketContext = createContext();
+const fallbackSocketUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+const socketServerUrl = import.meta.env.VITE_SOCKET_SERVER_URL?.trim() || fallbackSocketUrl;
 
 export const useSocket = () => useContext(SocketContext);
 
@@ -15,8 +17,7 @@ export const SocketProvider = ({ children }) => {
     const [voteResults, setVoteResults] = useState(null);
 
     useEffect(() => {
-        // In production this would be an env var
-        const newSocket = io('http://localhost:3001');
+        const newSocket = io(socketServerUrl);
         setSocket(newSocket);
 
         newSocket.on('room-created', (roomData) => {
