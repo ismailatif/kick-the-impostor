@@ -14,7 +14,7 @@ import { useSocket } from "@/hooks/useSocket";
 const OnlineGamePlay = ({ onEnd }) => {
     const { t, isRTL } = useLanguage();
     const { sfx, playBGM, isMuted, toggleMute } = useAudio();
-    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, submitVote } = useSocket();
+    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, setReady, resetGame, submitVote } = useSocket();
 
     const [isRevealed, setIsRevealed] = useState(false);
     const [holdProgress, setHoldProgress] = useState(0);
@@ -326,7 +326,11 @@ const OnlineGamePlay = ({ onEnd }) => {
                         <motion.button
                             whileHover={hoverScale}
                             whileTap={tapScale}
-                            onClick={() => window.location.reload()}
+                            onClick={() => {
+                                sfx.click();
+                                resetGame();
+                                setReady(room.code, false);
+                            }}
                             className="flex-1 glass-button py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg text-lg"
                         >
                             <RotateCcw className="w-5 h-5" />

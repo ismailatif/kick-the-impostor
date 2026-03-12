@@ -39,6 +39,13 @@ const Index = () => {
     }
   }, [onlinePhase, screen]);
 
+  // Watch for phase reset/end to return to lobby from play
+  useEffect(() => {
+    if (screen === "online-play" && !onlinePhase) {
+      setScreen("online-lobby");
+    }
+  }, [onlinePhase, screen]);
+
   // Ensure lobby bgm plays when returned to home if unmuted
   useEffect(() => {
     if (screen === "home" && !isMuted) {

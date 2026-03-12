@@ -80,6 +80,13 @@ export const SocketProvider = ({ children }) => {
         socket?.emit('submit-vote', { code, votedIndex });
     }, [socket]);
 
+    const resetGame = useCallback(() => {
+        setOnlinePhase(null);
+        setOnlineGameData(null);
+        setVotedPlayers([]);
+        setVoteResults(null);
+    }, []);
+
     return (
         <SocketContext.Provider value={{
             socket,
@@ -94,7 +101,8 @@ export const SocketProvider = ({ children }) => {
             setReady,
             startGame,
             syncPhase,
-            submitVote
+            submitVote,
+            resetGame
         }}>
             {children}
         </SocketContext.Provider>
