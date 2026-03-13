@@ -16,7 +16,7 @@ export const SocketProvider = ({ children }) => {
     const [voteResults, setVoteResults] = useState(null);
 
     useEffect(() => {
-        const newSocket = io("http://10.90.186.124:3001");
+        const newSocket = io("http://192.168.0.119:3001");
         setSocket(newSocket);
 
         newSocket.on('room-created', (roomData) => {

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon } from "lucide-react";
+import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { useSocket } from "@/hooks/useSocket";
@@ -19,10 +19,37 @@ const OnlineLobby = () => {
     const isHost = room.hostId === socket?.id;
     const everyoneReady = room.players.length >= 3 && room.players.every(p => p.id === room.hostId || p.ready);
 
+    const copyToClipboard = async (text) => {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers or insecure contexts
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+        } catch (error) {
+            console.error('Copy to clipboard failed:', error);
+            toast.error(t("setup.copyFailed") || "Failed to copy");
+            throw error;
+        }
+    };
+
     const copyCode = () => {
-        navigator.clipboard.writeText(room.code);
+        copyToClipboard(room.code);
         sfx.click();
         toast.success("Code copied!");
+    };
+
+    const copyInviteLink = () => {
+        const link = `${window.location.origin}?joinRoom=${room.code}`;
+        copyToClipboard(link);
+        sfx.click();
+        toast.success("Invite link copied!");
     };
 
     const handleToggleReady = () => {
@@ -113,6 +140,28 @@ const OnlineLobby = () => {
                         ))}
                     </div>
                 </div>
+
+                {/* Host: Invite Link */}
+                {isHost && (
+                    <motion.div variants={slideUpItem} className="game-card">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Link className="w-5 h-5 text-accent" />
+                            <h3 className="text-lg font-bold">{t("setup.inviteLink") || "Invite Link"}</h3>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">
+                            {t("setup.inviteLinkDesc") || "Share this link with friends to join your room"}
+                        </p>
+                        <motion.button
+                            whileHover={hoverScale}
+                            whileTap={tapScale}
+                            onClick={copyInviteLink}
+                            className="w-full py-3 px-4 bg-accent/10 border border-accent/30 rounded-2xl font-bold text-accent transition-all hover:bg-accent/20 flex items-center justify-center gap-2"
+                        >
+                            <Copy className="w-4 h-4" />
+                            {t("setup.copyInviteLink") || "Copy Invite Link"}
+                        </motion.button>
+                    </motion.div>
+                )}
 
                 {/* Host: Game settings (like local mode) */}
                 {isHost && (

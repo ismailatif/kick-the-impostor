@@ -6,6 +6,7 @@ import { useAudio } from "@/hooks/useAudio";
 import { useSocket } from "@/hooks/useSocket";
 import { hoverScale, tapScale, slideUpItem, staggerContainer } from "@/lib/animations";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const OnlineSetup = ({ onBack }) => {
     const { t, isRTL } = useLanguage();
@@ -16,6 +17,15 @@ const OnlineSetup = ({ onBack }) => {
     const [view, setView] = useState("choice"); // choice, create, join
 
     const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const joinCode = params.get("joinRoom");
+        if (joinCode) {
+            setRoomCode(joinCode.toUpperCase());
+            setView("join");
+        }
+    }, []);
 
     const handleCreate = () => {
         if (!playerName.trim()) {
