@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
-import { toast } from 'sonner';
+import { useCustomToast } from '@/hooks/useCustomToast';
+import { handleSocketError, ErrorTypes } from '@/lib/errorHandler';
 
 const SocketContext = createContext();
-
 
 export const useSocket = () => useContext(SocketContext);
 
@@ -14,70 +14,184 @@ export const SocketProvider = ({ children }) => {
     const [onlineGameData, setOnlineGameData] = useState(null);
     const [votedPlayers, setVotedPlayers] = useState([]);
     const [voteResults, setVoteResults] = useState(null);
+    const [connectionStatus, setConnectionStatus] = useState('disconnected');
+    const toast = useCustomToast();
 
     useEffect(() => {
-        const newSocket = io("http://192.168.0.119:3001");
-        setSocket(newSocket);
+        try {
+            const newSocket = io("https://imposter-production-a2ee.up.railway.app/", {
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 5,
+                transports: ['websocket', 'polling']
+            });
 
-        newSocket.on('room-created', (roomData) => {
-            setRoom(roomData);
-        });
+            // Connection events
+            newSocket.on('connect', () => {
+                console.log('Connected to server');
+                setConnectionStatus('connected');
+                setSocket(newSocket);
+            });
 
-        newSocket.on('room-updated', (roomData) => {
-            setRoom(roomData);
-        });
+            newSocket.on('disconnect', (reason) => {
+                console.log('Disconnected:', reason);
+                setConnectionStatus('disconnected');
+                if (reason === 'io server disconnect') {
+                    toast.warning('Disconnected', 'You were disconnected from the server');
+                }
+            });
 
-        newSocket.on('game-started', (data) => {
-            setOnlineGameData(data);
-            setOnlinePhase('reveal');
-        });
+            newSocket.on('connect_error', (error) => {
+                console.error('Connection error:', error);
+                setConnectionStatus('error');
+                toast.error(
+                    'Connection Error',
+                    'Could not connect to the server. Retrying...'
+                );
+            });
 
-        newSocket.on('phase-updated', (phase) => {
-            setOnlinePhase(phase);
-        });
+            // Room events
+            newSocket.on('room-created', (roomData) => {
+                console.log('Room created:', roomData.code);
+                setRoom(roomData);
+                toast.success('Room Created', `Room code: ${roomData.code}`);
+            });
 
-        newSocket.on('vote-recorded', ({ playerId }) => {
-            setVotedPlayers(prev => [...prev, playerId]);
-        });
+            newSocket.on('room-updated', (roomData) => {
+                console.log('Room updated');
+                setRoom(roomData);
+            });
 
-        newSocket.on('vote-results', (data) => {
-            setVoteResults(data);
-            setOnlinePhase('result');
-        });
+            // Game events
+            newSocket.on('game-started', (data) => {
+                console.log('Game started, role:', data.role);
+                setOnlineGameData(data);
+                setOnlinePhase('reveal');
+                toast.success('Game Started', `You are the ${data.role}!`);
+            });
 
-        newSocket.on('error', (msg) => {
-            toast.error(msg);
-        });
+            newSocket.on('phase-updated', (phase) => {
+                console.log('Phase updated:', phase);
+                setOnlinePhase(phase);
+            });
 
-        return () => newSocket.close();
+            // Vote events
+            newSocket.on('vote-recorded', ({ playerId }) => {
+                console.log('Vote recorded from:', playerId);
+                setVotedPlayers(prev => [...new Set([...prev, playerId])]);
+            });
+
+            newSocket.on('vote-results', (data) => {
+                console.log('Vote results received');
+                setVoteResults(data);
+                setOnlinePhase('result');
+
+                if (data.impostorCaught) {
+                    toast.success(
+                        '🎉 Citizens Win!',
+                        `The impostor(s) were: ${data.impostorNames.join(', ')}`
+                    );
+                } else {
+                    toast.error(
+                        '👻 Impostors Win!',
+                        `The secret word was: ${data.secretWord}`
+                    );
+                }
+            });
+
+            // Error handling
+            newSocket.on('error', (errorData) => {
+                if (typeof errorData === 'string') {
+                    // Legacy string errors
+                    handleSocketError(errorData, toast);
+                } else if (errorData?.message) {
+                    // New error object format
+                    console.error('Server error:', errorData);
+                    toast.error(
+                        'Error',
+                        errorData.message || 'An unexpected error occurred'
+                    );
+                } else {
+                    handleSocketError(errorData, toast);
+                }
+            });
+
+            return () => newSocket.close();
+        } catch (error) {
+            console.error('Socket initialization error:', error);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Room operations with error handling
     const createRoom = useCallback((playerName) => {
-        socket?.emit('create-room', { playerName });
+        if (!socket) return;
+        try {
+            if (!playerName || playerName.trim().length === 0) return;
+            socket.emit('create-room', { playerName: playerName.trim() });
+        } catch (error) {
+            console.error('Error creating room:', error);
+        }
     }, [socket]);
 
     const joinRoom = useCallback((code, playerName) => {
-        socket?.emit('join-room', { code, playerName });
+        if (!socket) return;
+        try {
+            const upperCode = code.toUpperCase().trim();
+            if (!/^[A-Z0-9]{4}$/.test(upperCode)) return;
+            if (!playerName || playerName.trim().length === 0) return;
+            socket.emit('join-room', { code: upperCode, playerName: playerName.trim() });
+        } catch (error) {
+            console.error('Error joining room:', error);
+        }
     }, [socket]);
 
     const updateSettings = useCallback((code, settings) => {
-        socket?.emit('update-settings', { code, settings });
+        if (!socket) return;
+        try {
+            socket.emit('update-settings', { code, settings });
+        } catch (error) {
+            console.error('Error updating settings:', error);
+        }
     }, [socket]);
 
     const setReady = useCallback((code, ready) => {
-        socket?.emit('set-ready', { code, ready });
+        if (!socket) return;
+        try {
+            socket.emit('set-ready', { code, ready });
+        } catch (error) {
+            console.error('Error setting ready:', error);
+        }
     }, [socket]);
 
     const startGame = useCallback((code, gameData) => {
-        socket?.emit('start-game', { code, gameData });
+        if (!socket) return;
+        try {
+            if (!gameData || !gameData.secretWord) return;
+            socket.emit('start-game', { code, gameData });
+        } catch (error) {
+            console.error('Error starting game:', error);
+        }
     }, [socket]);
 
     const syncPhase = useCallback((code, phase) => {
-        socket?.emit('sync-phase', { code, phase });
+        if (!socket) return;
+        try {
+            socket.emit('sync-phase', { code, phase });
+        } catch (error) {
+            console.error('Error syncing phase:', error);
+        }
     }, [socket]);
 
     const submitVote = useCallback((code, votedIndex) => {
-        socket?.emit('submit-vote', { code, votedIndex });
+        if (!socket) return;
+        try {
+            if (typeof votedIndex !== 'number' || votedIndex < 0) return;
+            socket.emit('submit-vote', { code, votedIndex });
+        } catch (error) {
+            console.error('Error submitting vote:', error);
+        }
     }, [socket]);
 
     const resetGame = useCallback(() => {
@@ -95,6 +209,7 @@ export const SocketProvider = ({ children }) => {
             onlineGameData,
             votedPlayers,
             voteResults,
+            connectionStatus,
             createRoom,
             joinRoom,
             updateSettings,
