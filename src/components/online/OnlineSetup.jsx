@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, User, Hash, Globe, Plus } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocket } from "@/hooks/useSocketHook";
 import { hoverScale, tapScale, slideUpItem, staggerContainer } from "@/lib/animations";
 import { toast } from "sonner";
 import { useEffect } from "react";

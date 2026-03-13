@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocket } from "@/hooks/useSocketHook";
 import { hoverScale, tapScale, slideUpItem, staggerContainer } from "@/lib/animations";
 import { WORD_BANKS, getCategoryWordBankKey, CATEGORY_KEYS } from "@/i18n/translations";
 import { toast } from "sonner";

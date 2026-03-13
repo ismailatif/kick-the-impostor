@@ -12,7 +12,7 @@ import OnlineSetup from "@/components/online/OnlineSetup";
 import OnlineLobby from "@/components/online/OnlineLobby";
 import OnlineGamePlay from "@/components/online/OnlineGamePlay";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocket } from "@/hooks/useSocketHook";
 import { useAudio } from "@/hooks/useAudio";
 import { useTheme } from "next-themes";
 

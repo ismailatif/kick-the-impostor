@@ -1,11 +1,10 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { handleSocketError, ErrorTypes } from '@/lib/errorHandler';
 
-const SocketContext = createContext();
 
-export const useSocket = () => useContext(SocketContext);
+export const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
