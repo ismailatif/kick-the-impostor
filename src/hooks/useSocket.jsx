@@ -1,11 +1,8 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { handleSocketError, ErrorTypes } from '@/lib/errorHandler';
-
-const SocketContext = createContext();
-
-export const useSocket = () => useContext(SocketContext);
+import { SocketContext } from '@/hooks/SocketContext';
 
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
@@ -53,22 +50,49 @@ export const SocketProvider = ({ children }) => {
 
             // Room events
             newSocket.on('room-created', (roomData) => {
-                console.log('Room created:', roomData.code);
-                setRoom(roomData);
-                toast.success('Room Created', `Room code: ${roomData.code}`);
+                try {
+                    console.log('Room created:', roomData.code);
+                    if (!roomData || !roomData.code) {
+                        throw new Error('Invalid room data received');
+                    }
+                    setRoom(roomData);
+                    setTimeout(() => {
+                        toast.success('Room Created', `Room code: ${roomData.code}`);
+                    }, 0);
+                } catch (error) {
+                    console.error('Error handling room-created event:', error);
+                    toast.error('Error', 'Failed to process room creation');
+                }
             });
 
             newSocket.on('room-updated', (roomData) => {
-                console.log('Room updated');
-                setRoom(roomData);
+                try {
+                    console.log('Room updated');
+                    if (!roomData || !roomData.code) {
+                        throw new Error('Invalid room data received in update');
+                    }
+                    setRoom(roomData);
+                } catch (error) {
+                    console.error('Error handling room-updated event:', error);
+                }
             });
 
             // Game events
             newSocket.on('game-started', (data) => {
-                console.log('Game started, role:', data.role);
-                setOnlineGameData(data);
-                setOnlinePhase('reveal');
-                toast.success('Game Started', `You are the ${data.role}!`);
+                try {
+                    console.log('Game started, role:', data.role);
+                    if (!data || !data.role) {
+                        throw new Error('Invalid game data received');
+                    }
+                    setOnlineGameData(data);
+                    setOnlinePhase('reveal');
+                    setTimeout(() => {
+                        toast.success('Game Started', `You are the ${data.role}!`);
+                    }, 0);
+                } catch (error) {
+                    console.error('Error handling game-started event:', error);
+                    toast.error('Error', 'Failed to process game start');
+                }
             });
 
             newSocket.on('phase-updated', (phase) => {

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocket } from "@/hooks/useSocketHook";
 
 const OnlineGamePlay = ({ onEnd }) => {
     const { t, isRTL } = useLanguage();

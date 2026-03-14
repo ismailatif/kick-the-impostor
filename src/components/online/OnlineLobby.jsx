@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocket } from "@/hooks/useSocketHook";
 import { hoverScale, tapScale, slideUpItem, staggerContainer } from "@/lib/animations";
 import { WORD_BANKS, getCategoryWordBankKey, CATEGORY_KEYS } from "@/i18n/translations";
 import { toast } from "sonner";
@@ -14,10 +14,12 @@ const OnlineLobby = () => {
     const { room, socket, updateSettings, setReady, startGame } = useSocket();
     const [settingsOpen, setSettingsOpen] = useState(true);
 
-    if (!room) return null;
+    if (!room || !room.players || !room.settings) return null;
 
     const isHost = room.hostId === socket?.id;
-    const everyoneReady = room.players.length >= 3 && room.players.every(p => p.id === room.hostId || p.ready);
+    const everyoneReady = room.players.length >= 3 && room.players.every((p) => {
+        return p && p.id && (p.id === room.hostId || p.ready);
+    });
 
     const copyToClipboard = async (text) => {
         try {
