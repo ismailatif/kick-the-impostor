@@ -14,10 +14,8 @@ const OnlineLobby = () => {
     const { room, socket, updateSettings, setReady, startGame } = useSocket();
     const [settingsOpen, setSettingsOpen] = useState(true);
 
-    if (!room || !room.players || !room.settings) return null;
-
-    const isHost = room.hostId === socket?.id;
-    const everyoneReady = room.players.length >= 3 && room.players.every((p) => {
+    const isHost = room?.hostId === socket?.id;
+    const everyoneReady = room?.players?.length >= 3 && room?.players?.every((p) => {
         return p && p.id && (p.id === room.hostId || p.ready);
     });
 
@@ -29,11 +27,13 @@ const OnlineLobby = () => {
 
     // Ensure at least one category is selected by default (host only)
     useEffect(() => {
-        if (isHost && settingsOpen && (!room.settings?.categories || room.settings.categories.length === 0)) {
+        if (isHost && settingsOpen && (!room?.settings?.categories || room.settings.categories.length === 0)) {
             handleSettingsChange({ categories: [CATEGORY_KEYS[0]] });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isHost, settingsOpen]);
+
+    if (!room || !room.players || !room.settings) return null;
 
     const copyToClipboard = async (text) => {
         try {
