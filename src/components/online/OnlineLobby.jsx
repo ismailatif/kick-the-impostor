@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
@@ -20,6 +20,20 @@ const OnlineLobby = () => {
     const everyoneReady = room.players.length >= 3 && room.players.every((p) => {
         return p && p.id && (p.id === room.hostId || p.ready);
     });
+
+    const handleSettingsChange = (next) => {
+        if (!room || room.hostId !== socket?.id) return;
+        const newSettings = { ...room.settings, ...next };
+        updateSettings(room.code, newSettings);
+    };
+
+    // Ensure at least one category is selected by default (host only)
+    useEffect(() => {
+        if (isHost && settingsOpen && (!room.settings?.categories || room.settings.categories.length === 0)) {
+            handleSettingsChange({ categories: [CATEGORY_KEYS[0]] });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isHost, settingsOpen]);
 
     const copyToClipboard = async (text) => {
         try {
@@ -60,12 +74,6 @@ const OnlineLobby = () => {
             sfx.click();
             setReady(room.code, !me.ready);
         }
-    };
-
-    const handleSettingsChange = (next) => {
-        if (!room || room.hostId !== socket?.id) return;
-        const newSettings = { ...room.settings, ...next };
-        updateSettings(room.code, newSettings);
     };
 
     const handleStart = () => {
@@ -210,11 +218,16 @@ const OnlineLobby = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleSettingsChange({ hasTimer: !room.settings?.hasTimer })}
-                                        className={`w-12 h-7 rounded-full transition-colors ${
+                                        className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${
                                             room.settings?.hasTimer ? "bg-primary" : "bg-muted"
                                         }`}
                                     >
                                         <span className="sr-only">{room.settings?.hasTimer ? "On" : "Off"}</span>
+                                        <span
+                                            className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                                                room.settings?.hasTimer ? "translate-x-5" : "translate-x-0"
+                                            }`}
+                                        ></span>
                                     </button>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
@@ -226,11 +239,16 @@ const OnlineLobby = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleSettingsChange({ impostorHint: !room.settings?.impostorHint })}
-                                        className={`w-12 h-7 rounded-full transition-colors ${
+                                        className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${
                                             room.settings?.impostorHint ? "bg-primary" : "bg-muted"
                                         }`}
                                     >
                                         <span className="sr-only">{room.settings?.impostorHint ? "On" : "Off"}</span>
+                                        <span
+                                            className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                                                room.settings?.impostorHint ? "translate-x-5" : "translate-x-0"
+                                            }`}
+                                        ></span>
                                     </button>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{t("setup.hintDesc")}</p>
@@ -240,11 +258,16 @@ const OnlineLobby = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleSettingsChange({ chaosMode: !room.settings?.chaosMode })}
-                                        className={`w-12 h-7 rounded-full transition-colors ${
+                                        className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${
                                             room.settings?.chaosMode ? "bg-primary" : "bg-muted"
                                         }`}
                                     >
                                         <span className="sr-only">{room.settings?.chaosMode ? "On" : "Off"}</span>
+                                        <span
+                                            className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                                                room.settings?.chaosMode ? "translate-x-5" : "translate-x-0"
+                                            }`}
+                                        ></span>
                                     </button>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{t("setup.chaosDesc")}</p>
