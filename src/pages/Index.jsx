@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { pageTransition, hoverScale } from "@/lib/animations";
 import { Play, HelpCircle, Volume2, VolumeX, Moon, Sun } from "lucide-react";
@@ -73,6 +74,56 @@ const Index = () => {
     setIsMuted(!isMuted);
   };
 
+  const toggleTheme = (event) => {
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    if (!document.startViewTransition) {
+      setTheme(theme === "dark" ? "light" : "dark");
+      return;
+    }
+
+    const isToLight = theme === "dark";
+    if (isToLight) {
+      document.documentElement.setAttribute('data-theme-transition', 'reverse');
+    }
+
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        setTheme(theme === "dark" ? "light" : "dark");
+      });
+    });
+
+    transition.finished.finally(() => {
+      document.documentElement.removeAttribute('data-theme-transition');
+    });
+
+    transition.ready.then(() => {
+      // Add a small buffer to ensure full screen coverage
+      const radius = endRadius * 1.1;
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${radius}px at ${x}px ${y}px)`,
+      ];
+      
+      document.documentElement.animate(
+        {
+          clipPath: isToLight ? [...clipPath].reverse() : clipPath,
+        },
+        {
+          duration: 400,
+          easing: "ease-in-out",
+          fill: "forwards",
+          pseudoElement: isToLight ? "::view-transition-old(root)" : "::view-transition-new(root)",
+        }
+      );
+    });
+  };
+
   return (
     <AnimatePresence mode="wait">
       {screen === "setup" && (
@@ -133,9 +184,9 @@ const Index = () => {
             <motion.button
               whileHover={hoverScale}
               onMouseEnter={() => sfx.hover()}
-              onClick={() => {
+              onClick={(e) => {
                 sfx.click();
-                setTheme(theme === "dark" ? "light" : "dark");
+                toggleTheme(e);
               }}
               className="w-12 h-12 rounded-xl bg-card border border-white/20 shadow-sm flex items-center justify-center transition-colors">
               {theme === "dark" ? <Sun className="w-5 h-5 text-accent" /> : <Moon className="w-5 h-5 text-primary" />}

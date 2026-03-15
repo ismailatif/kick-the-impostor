@@ -196,7 +196,32 @@
     @apply border-s-4 border-s-game-pink;
   }
 
+
   .player-badge {
     @apply px-4 py-2 rounded-full font-bold text-sm shadow-sm border border-white/10;
   }
+}
+
+/* View Transitions for Telegram-style theme reveal */
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+[data-theme-transition="reverse"]::view-transition-old(root) {
+  z-index: 9999;
+}
+
+[data-theme-transition="reverse"]::view-transition-new(root) {
+  z-index: 1;
 }
