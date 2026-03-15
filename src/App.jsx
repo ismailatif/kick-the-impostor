@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { CustomToastContainer } from "@/components/ui/CustomToast";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { SocketProvider } from "@/hooks/useSocket";
 
 const queryClient = new QueryClient();
 
@@ -18,16 +19,18 @@ const App = () => (
       <AudioProvider>
         <ThemeProvider>
           <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <CustomToastContainer />
-              <HashRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </HashRouter>
-            </TooltipProvider>
+            <SocketProvider>
+              <TooltipProvider>
+                <Toaster />
+                <CustomToastContainer />
+                <HashRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </HashRouter>
+              </TooltipProvider>
+            </SocketProvider>
           </LanguageProvider>
         </ThemeProvider>
       </AudioProvider>
