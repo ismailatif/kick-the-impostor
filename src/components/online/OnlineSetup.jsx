@@ -19,7 +19,10 @@ const OnlineSetup = ({ onBack }) => {
     const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
+        // With HashRouter, query params are inside the hash: /#/?joinRoom=CODE
+        const hash = window.location.hash; // e.g. "#/?joinRoom=ABCD"
+        const queryStr = hash.includes("?") ? hash.slice(hash.indexOf("?")) : "";
+        const params = new URLSearchParams(queryStr);
         const joinCode = params.get("joinRoom");
         if (joinCode) {
             setRoomCode(joinCode.toUpperCase());

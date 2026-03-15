@@ -62,7 +62,7 @@ const OnlineLobby = () => {
     };
 
     const copyInviteLink = () => {
-        const link = `${window.location.origin}?joinRoom=${room.code}`;
+        const link = `${window.location.origin}/kick-the-impostor/#/?joinRoom=${room.code}`;
         copyToClipboard(link);
         sfx.click();
         toast.success("Invite link copied!");
