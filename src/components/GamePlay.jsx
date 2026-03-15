@@ -89,7 +89,9 @@ const GamePlay = ({ config, onEnd }) => {
       setPhase("speaking");
       playBGM('suspense');
       if (!audioRef.current && !isMuted) {
-        audioRef.current = new Audio('/timer.ogg');
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        audioRef.current = new Audio(`${cleanBaseUrl}timer.ogg`);
         audioRef.current.loop = true;
         audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
       }
@@ -280,7 +282,7 @@ const GamePlay = ({ config, onEnd }) => {
         {/* Breathing background */}
         <motion.div animate={breathing} className="absolute inset-0 bg-primary/5 z-0 pointer-events-none" />
 
-        <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={toggleMute} className="absolute top-6 right-5 w-12 h-12 rounded-xl bg-card border border-white/20 shadow-sm flex items-center justify-center z-20">
+        <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={toggleMute} className="absolute top-6 end-5 w-12 h-12 rounded-xl bg-card border border-white/20 shadow-sm flex items-center justify-center z-20">
           {isMuted ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
         </motion.button>
 
@@ -387,7 +389,7 @@ const GamePlay = ({ config, onEnd }) => {
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
                   <User className="w-6 h-6 text-primary" />
                 </div>
-                <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className={`flex-1 ${isRTL ? 'text-start' : 'text-start'}`}>
                   <p className="text-xl font-bold">{player}</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center border border-white/10 opacity-50">

@@ -9,7 +9,7 @@ const ModeSelection = ({ onSelect, onBack }) => {
 
     return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 relative overflow-hidden">
-            <div className="absolute top-6 left-5">
+            <div className="absolute top-6 start-5">
                 <motion.button
                     whileHover={hoverScale}
                     whileTap={tapScale}
@@ -47,8 +47,8 @@ const ModeSelection = ({ onSelect, onBack }) => {
                         <h3 className="text-2xl font-black mb-1">{t("mode.local")}</h3>
                         <p className="text-sm text-muted-foreground font-semibold leading-tight">{t("mode.localDesc")}</p>
                     </div>
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Users className="w-24 h-24 -mr-8 -mt-8 rotate-12 text-primary" />
+                    <div className="absolute top-0 end-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Users className="w-24 h-24 -me-8 -mt-8 rotate-12 text-primary" />
                     </div>
                 </motion.button>
 
@@ -66,8 +66,8 @@ const ModeSelection = ({ onSelect, onBack }) => {
                         <h3 className="text-2xl font-black mb-1">{t("mode.online")}</h3>
                         <p className="text-sm text-muted-foreground font-semibold leading-tight">{t("mode.onlineDesc")}</p>
                     </div>
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Globe className="w-24 h-24 -mr-8 -mt-8 rotate-12 text-blue-500" />
+                    <div className="absolute top-0 end-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Globe className="w-24 h-24 -me-8 -mt-8 rotate-12 text-blue-500" />
                     </div>
                     <div className="bg-blue-500/20 text-blue-500 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full absolute top-4 right-4 animate-pulse">
                         Beta

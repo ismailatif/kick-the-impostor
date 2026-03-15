@@ -134,7 +134,6 @@
 
   body {
     @apply bg-background text-foreground font-cairo cursor-default;
-    direction: rtl;
     background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
     background-attachment: fixed;
     text-rendering: optimizeLegibility;
@@ -178,23 +177,23 @@
   }
 
   .step-card-blue {
-    @apply border-r-4 border-r-primary;
+    @apply border-s-4 border-s-primary;
   }
 
   .step-card-green {
-    @apply border-r-4 border-r-success;
+    @apply border-s-4 border-s-success;
   }
 
   .step-card-red {
-    @apply border-r-4 border-r-destructive;
+    @apply border-s-4 border-s-destructive;
   }
 
   .step-card-yellow {
-    @apply border-r-4 border-r-accent;
+    @apply border-s-4 border-s-accent;
   }
 
   .step-card-pink {
-    @apply border-r-4 border-r-game-pink;
+    @apply border-s-4 border-s-game-pink;
   }
 
   .player-badge {

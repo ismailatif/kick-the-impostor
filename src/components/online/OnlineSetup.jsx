@@ -54,7 +54,7 @@ const OnlineSetup = ({ onBack }) => {
 
     return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full p-6 flex items-center justify-between z-20">
+            <div className="absolute top-0 start-0 w-full p-6 flex items-center justify-between z-20">
                 <motion.button
                     whileHover={hoverScale}
                     whileTap={tapScale}
@@ -113,13 +113,13 @@ const OnlineSetup = ({ onBack }) => {
                                 {t("setup.playerName")}
                             </label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/50" />
+                                <User className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/50" />
                                 <input
                                     type="text"
                                     value={playerName}
                                     onChange={(e) => setPlayerName(e.target.value)}
                                     placeholder={t("setup.playerName")}
-                                    className="w-full bg-background border border-white/10 rounded-2xl py-4 pl-12 pr-4 font-bold outline-none focus:border-primary transition-all shadow-inner"
+                                    className="w-full bg-background border border-white/10 rounded-2xl py-4 ps-12 pr-4 font-bold outline-none focus:border-primary transition-all shadow-inner"
                                 />
                             </div>
                         </div>
@@ -130,14 +130,14 @@ const OnlineSetup = ({ onBack }) => {
                                     {t("setup.roomCode")}
                                 </label>
                                 <div className="relative">
-                                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500/50" />
+                                    <Hash className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500/50" />
                                     <input
                                         type="text"
                                         value={roomCode}
                                         onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                                         placeholder="ABCD"
                                         maxLength={4}
-                                        className="w-full bg-background border border-white/10 rounded-2xl py-4 pl-12 pr-4 font-bold outline-none focus:border-blue-500 transition-all shadow-inner text-xl tracking-[0.5em] uppercase"
+                                        className="w-full bg-background border border-white/10 rounded-2xl py-4 ps-12 pr-4 font-bold outline-none focus:border-blue-500 transition-all shadow-inner text-xl tracking-[0.5em] uppercase"
                                     />
                                 </div>
                             </motion.div>

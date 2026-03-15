@@ -15,12 +15,15 @@ export const AudioProvider = ({ children }) => {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         audioCtxRef.current = new AudioContextClass();
 
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
         // Initialize background audio elements
-        lobbyBgmRef.current = new Audio('/lobby.ogg');
+        lobbyBgmRef.current = new Audio(`${cleanBaseUrl}lobby.ogg`);
         lobbyBgmRef.current.loop = true;
         lobbyBgmRef.current.volume = 0;
 
-        suspenseBgmRef.current = new Audio('/suspense.ogg');
+        suspenseBgmRef.current = new Audio(`${cleanBaseUrl}suspense.ogg`);
         suspenseBgmRef.current.loop = true;
         suspenseBgmRef.current.volume = 0;
 
@@ -44,7 +47,9 @@ export const AudioProvider = ({ children }) => {
         if (isMuted || !audioCtxRef.current || audioCtxRef.current.state === 'closed') return;
 
         if (audioCtxRef.current.state === 'suspended') {
-            audioCtxRef.current.resume().catch(e => console.warn("Failed to resume AudioContext", e));
+            audioCtxRef.current.resume().then(() => {
+                console.log("AudioContext resumed successfully");
+            }).catch(e => console.warn("Failed to resume AudioContext", e));
         }
 
         const oscillator = audioCtxRef.current.createOscillator();
@@ -93,7 +98,9 @@ export const AudioProvider = ({ children }) => {
         if (isMuted || !audioCtxRef.current || audioCtxRef.current.state === 'closed') return;
 
         if (audioCtxRef.current.state === 'suspended') {
-            audioCtxRef.current.resume().catch(e => console.warn("Failed to resume AudioContext", e));
+            audioCtxRef.current.resume().then(() => {
+                console.log("AudioContext resumed for BGM");
+            }).catch(e => console.warn("Failed to resume AudioContext", e));
         }
 
         const fadeOut = (audioEl) => {

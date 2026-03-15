@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link } from "lucide-react";
+import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { useSocket } from "@/hooks/useSocketHook";
@@ -111,84 +111,47 @@ const OnlineLobby = () => {
                 <h1 className="text-2xl font-black text-primary drop-shadow-sm uppercase tracking-tighter">
                     {t("setup.lobby")}
                 </h1>
-                <div className="flex items-center gap-2 bg-card border border-white/10 px-4 py-2 rounded-2xl shadow-inner">
-                    <span className="text-xl font-black tracking-widest text-primary">{room.code}</span>
-                    <button onClick={copyCode} className="p-1 hover:bg-white/5 rounded-lg transition-colors">
-                        <Copy className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                </div>
-            </div>
-
-            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="px-5 space-y-6 mt-6">
-                {/* Player List */}
-                <div className="game-card">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold flex items-center gap-2">
-                            <Users className="w-5 h-5 text-primary" /> {t("setup.players")}
-                        </h3>
-                        <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-lg">
-                            {room.players.length}/20
-                        </span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-card border border-white/10 px-4 py-2 rounded-2xl shadow-inner">
+                        <span className="text-xl font-black tracking-widest text-primary">{room.code}</span>
+                        <button onClick={copyCode} className="p-1 hover:bg-white/5 rounded-lg transition-colors">
+                            <Copy className="w-4 h-4 text-muted-foreground" />
+                        </button>
                     </div>
-
-                    <div className="space-y-3">
-                        {room.players.map((player, i) => (
-                            <motion.div key={player.id} variants={slideUpItem} className="flex items-center gap-3 p-3 bg-background border border-white/5 rounded-2xl">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${player.ready || player.id === room.hostId ? 'bg-primary/20 border border-primary/30' : 'bg-muted border border-white/10'}`}>
-                                    <UserIcon className={`w-5 h-5 ${player.ready || player.id === room.hostId ? 'text-primary' : 'text-muted-foreground'}`} />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-bold flex items-center gap-2">
-                                        {player.name}
-                                        {player.id === room.hostId && <ShieldCheck className="w-4 h-4 text-accent" />}
-                                    </p>
-                                    <p className={`text-[10px] uppercase font-black tracking-widest ${player.ready || player.id === room.hostId ? 'text-primary' : 'text-muted-foreground'}`}>
-                                        {player.id === room.hostId ? 'Host' : (player.ready ? t("setup.ready") : t("setup.notReady"))}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Host: Invite Link */}
-                {isHost && (
-                    <motion.div variants={slideUpItem} className="game-card">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Link className="w-5 h-5 text-accent" />
-                            <h3 className="text-lg font-bold">{t("setup.inviteLink") || "Invite Link"}</h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-3">
-                            {t("setup.inviteLinkDesc") || "Share this link with friends to join your room"}
-                        </p>
+                    {isHost && (
                         <motion.button
                             whileHover={hoverScale}
                             whileTap={tapScale}
-                            onClick={copyInviteLink}
-                            className="w-full py-3 px-4 bg-accent/10 border border-accent/30 rounded-2xl font-bold text-accent transition-all hover:bg-accent/20 flex items-center justify-center gap-2"
+                            onClick={() => {
+                                sfx.click();
+                                setSettingsOpen(!settingsOpen);
+                            }}
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all ${settingsOpen ? 'bg-primary border-primary text-white' : 'bg-card border-white/20 text-primary'}`}
                         >
-                            <Copy className="w-4 h-4" />
-                            {t("setup.copyInviteLink") || "Copy Invite Link"}
+                            <Settings className={`w-6 h-6 ${settingsOpen ? 'animate-spin-slow' : ''}`} />
                         </motion.button>
-                    </motion.div>
-                )}
+                    )}
+                </div>
+            </div>
 
-                {/* Host: Game settings (like local mode) */}
-                {isHost && (
-                    <motion.div variants={slideUpItem} className="game-card">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold flex items-center gap-2">
-                                {t("setup.subtitle")}
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setSettingsOpen((o) => !o)}
-                                className="text-sm text-muted-foreground hover:text-primary"
-                            >
-                                {settingsOpen ? "−" : "+"}
-                            </button>
-                        </div>
-                        {settingsOpen && (
+            <motion.div layout variants={staggerContainer} initial="hidden" animate="show" className="px-5 space-y-6 mt-6">
+                {/* Host: Game settings - Moved up */}
+                <AnimatePresence mode="popLayout">
+                    {isHost && settingsOpen && (
+                        <motion.div
+                            key="settings-card"
+                            layout
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                            className="game-card overflow-hidden"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-primary" /> {t("setup.subtitle")}
+                                </h3>
+                            </div>
                             <div className="space-y-4">
                                 {/* Impostor count */}
                                 <div>
@@ -225,7 +188,7 @@ const OnlineLobby = () => {
                                         <span className="sr-only">{room.settings?.hasTimer ? "On" : "Off"}</span>
                                         <span
                                             className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
-                                                room.settings?.hasTimer ? "translate-x-5" : "translate-x-0"
+                                                room.settings?.hasTimer ? (lang === 'ar' ? "-translate-x-5" : "translate-x-5") : "translate-x-0"
                                             }`}
                                         ></span>
                                     </button>
@@ -246,7 +209,7 @@ const OnlineLobby = () => {
                                         <span className="sr-only">{room.settings?.impostorHint ? "On" : "Off"}</span>
                                         <span
                                             className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
-                                                room.settings?.impostorHint ? "translate-x-5" : "translate-x-0"
+                                                room.settings?.impostorHint ? (lang === 'ar' ? "-translate-x-5" : "translate-x-5") : "translate-x-0"
                                             }`}
                                         ></span>
                                     </button>
@@ -265,7 +228,7 @@ const OnlineLobby = () => {
                                         <span className="sr-only">{room.settings?.chaosMode ? "On" : "Off"}</span>
                                         <span
                                             className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
-                                                room.settings?.chaosMode ? "translate-x-5" : "translate-x-0"
+                                                room.settings?.chaosMode ? (lang === 'ar' ? "-translate-x-5" : "translate-x-5") : "translate-x-0"
                                             }`}
                                         ></span>
                                     </button>
@@ -306,20 +269,73 @@ const OnlineLobby = () => {
                                     </p>
                                 </div>
                             </div>
-                        )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Player List */}
+                <motion.div layout className="game-card">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                            <Users className="w-5 h-5 text-primary" /> {t("setup.players")}
+                        </h3>
+                        <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-lg">
+                            {room.players.length}/20
+                        </span>
+                    </div>
+
+                    <div className="space-y-3">
+                        {room.players.map((player) => (
+                            <motion.div key={player.id} variants={slideUpItem} className="flex items-center gap-3 p-3 bg-background border border-white/5 rounded-2xl">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${player.ready || player.id === room.hostId ? 'bg-primary/20 border border-primary/30' : 'bg-muted border border-white/10'}`}>
+                                    <UserIcon className={`w-5 h-5 ${player.ready || player.id === room.hostId ? 'text-primary' : 'text-muted-foreground'}`} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-bold flex items-center gap-2">
+                                        {player.name}
+                                        {player.id === room.hostId && <ShieldCheck className="w-4 h-4 text-accent" />}
+                                    </p>
+                                    <p className={`text-[10px] uppercase font-black tracking-widest ${player.ready || player.id === room.hostId ? 'text-primary' : 'text-muted-foreground'}`}>
+                                        {player.id === room.hostId ? 'Host' : (player.ready ? t("setup.ready") : t("setup.notReady"))}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+
+                {/* Host: Invite Link */}
+                {isHost && (
+                    <motion.div layout variants={slideUpItem} className="game-card">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Link className="w-5 h-5 text-accent" />
+                            <h3 className="text-lg font-bold">{t("setup.inviteLink") || "Invite Link"}</h3>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">
+                            {t("setup.inviteLinkDesc") || "Share this link with friends to join your room"}
+                        </p>
+                        <motion.button
+                            whileHover={hoverScale}
+                            whileTap={tapScale}
+                            onClick={copyInviteLink}
+                            className="w-full py-3 px-4 bg-accent/10 border border-accent/30 rounded-2xl font-bold text-accent transition-all hover:bg-accent/20 flex items-center justify-center gap-2"
+                        >
+                            <Copy className="w-4 h-4" />
+                            {t("setup.copyInviteLink") || "Copy Invite Link"}
+                        </motion.button>
                     </motion.div>
                 )}
 
                 {/* Info Box */}
                 {!isHost && !everyoneReady && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-accent/10 border border-accent/20 rounded-2xl text-center">
+                    <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-accent/10 border border-accent/20 rounded-2xl text-center">
                         <p className="text-sm font-bold text-accent italic">{t("setup.waitingForHost")}</p>
                     </motion.div>
                 )}
             </motion.div>
 
             {/* Footer Actions */}
-            <div className="fixed bottom-0 left-0 right-0 p-5 glass-panel bg-background/80 max-w-md mx-auto z-20 flex gap-3">
+            <div className="fixed bottom-0 inset-x-0 p-5 glass-panel bg-background/80 max-w-md mx-auto z-20 flex gap-3">
                 {!isHost && (
                     <motion.button
                         whileHover={hoverScale} whileTap={tapScale}

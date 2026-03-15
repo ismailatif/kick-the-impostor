@@ -168,7 +168,7 @@ const Index = () => {
               onMouseEnter={() => sfx.hover()}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartClick}
-              className="w-full glass-button py-4 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.5)] transition-shadow">
+              className={`w-full glass-button py-4 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.5)] transition-shadow ${t("home.start") === "ابدأ" || t("home.start") === "ابدأ اللعب" ? "flex-row-reverse" : ""}`}>
               <Play className="w-6 h-6 fill-current" />
               {t("home.start")}
             </motion.button>
@@ -178,7 +178,7 @@ const Index = () => {
               onMouseEnter={() => sfx.hover()}
               whileTap={{ scale: 0.95 }}
               onClick={handleHowToClick}
-              className="w-full bg-card/80 backdrop-blur-sm text-foreground py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 shadow-game border border-white/20 hover:border-primary/30 transition-colors">
+              className={`w-full bg-card/80 backdrop-blur-sm text-foreground py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 shadow-game border border-white/20 hover:border-primary/30 transition-colors ${t("home.start") === "ابدأ" || t("home.start") === "ابدأ اللعب" ? "flex-row-reverse" : ""}`}>
               <HelpCircle className="w-5 h-5 text-primary" />
               {t("home.howToPlay")}
             </motion.button>

@@ -18,8 +18,21 @@ const HowToPlay = ({ isOpen, onClose }) => {
   return (<AnimatePresence>
     {isOpen && (<>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40" onClick={onClose} />
-      <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="fixed bottom-0 left-0 right-0 z-50 glass-panel max-h-[85vh] overflow-y-auto">
-        <div className="sticky top-0 bg-card/40 backdrop-blur-xl border-b border-white/10 pt-3 pb-2 px-6 rounded-t-3xl z-10">
+      <motion.div
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={{ top: 0, bottom: 0.5 }}
+        onDragEnd={(_, info) => {
+          if (info.offset.y > 150 || info.velocity.y > 500) {
+            onClose();
+          }
+        }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed bottom-0 left-0 right-0 z-50 glass-panel max-h-[85vh] overflow-y-auto touch-none">
+        <div className="sticky top-0 bg-card/40 backdrop-blur-xl border-b border-white/10 pt-3 pb-2 px-6 rounded-t-3xl z-10 cursor-grab active:cursor-grabbing">
           <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4" />
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => { sfx.click(); onClose(); }} onMouseEnter={() => sfx.hover()} className="p-2 transition-transform hover:scale-110">
@@ -27,8 +40,8 @@ const HowToPlay = ({ isOpen, onClose }) => {
             </button>
             <div className="flex items-center gap-2">
               <h2 className="text-2xl font-bold">{t("how.title")}</h2>
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary text-lg">©</span>
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center p-0">
+                <span className="text-primary text-xl font-bold leading-none mb-0.5">©</span>
               </div>
             </div>
           </div>
@@ -53,14 +66,14 @@ const HowToPlay = ({ isOpen, onClose }) => {
               )}
 
               <div className="flex items-center gap-4 w-full relative z-10">
-                <p className="text-base font-semibold flex-1 text-right leading-relaxed">{step.text}</p>
+                <p className="text-base font-semibold flex-1 text-start leading-relaxed">{step.text}</p>
                 <div className="relative flex-shrink-0">
                   <motion.div
                     animate={pulseGlow}
                     className={`w-12 h-12 rounded-full ${step.number === 7 ? 'bg-accent/20' : 'bg-muted/50'} flex items-center justify-center`}>
                     <step.icon className="w-6 h-6" />
                   </motion.div>
-                  <span className={`absolute -top-1 -right-1 w-6 h-6 ${step.numBg} text-card rounded-full text-xs flex items-center justify-center font-bold shadow-sm`}>
+                  <span className={`absolute -top-1 -end-1 w-6 h-6 ${step.numBg} text-card rounded-full text-xs flex items-center justify-center font-bold shadow-sm`}>
                     {step.number}
                   </span>
                 </div>
@@ -70,7 +83,7 @@ const HowToPlay = ({ isOpen, onClose }) => {
 
           <motion.div variants={slideUpItem} whileHover={hoverScale} onHoverStart={() => sfx.hover()} className="step-card bg-accent/10 border border-accent/20">
             <div className="flex items-center gap-4 w-full">
-              <p className="text-base font-semibold flex-1 text-right leading-relaxed">{t("how.share")}</p>
+              <p className="text-base font-semibold flex-1 text-start leading-relaxed">{t("how.share")}</p>
               <motion.div animate={pulseGlow} className="w-12 h-12 rounded-full bg-game-orange/20 flex items-center justify-center flex-shrink-0">
                 <Video className="w-6 h-6 text-game-orange" />
               </motion.div>

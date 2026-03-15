@@ -7,7 +7,7 @@ import { useAudio } from "@/hooks/useAudio";
 import { toast } from "sonner";
 import { CATEGORY_KEYS } from "@/i18n/translations";
 
-const ToggleSwitch = ({ value, onChange, onHover }) => (
+const ToggleSwitch = ({ value, onChange, onHover, isRTL }) => (
   <motion.button
     whileHover={hoverScale}
     whileTap={tapScale}
@@ -16,9 +16,9 @@ const ToggleSwitch = ({ value, onChange, onHover }) => (
     className={`w-14 h-8 rounded-full relative transition-all duration-300 shadow-inner overflow-hidden border ${value ? "bg-primary border-primary" : "bg-card/80 border-white/20"}`}>
     <motion.div
       initial={false}
-      animate={{ x: value ? 24 : 0 }}
+      animate={{ x: value ? (isRTL ? -24 : 24) : 0 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className="w-6 h-6 rounded-full bg-white shadow-sm absolute top-[3px] left-1"
+      className="w-6 h-6 rounded-full bg-white shadow-sm absolute top-[3px] start-1"
     />
   </motion.button>
 );
@@ -119,13 +119,13 @@ const GameSetup = ({ onBack, onStart }) => {
             {players.map((name, i) => (
               <motion.div key={i} variants={slideUpItem} className="flex gap-2">
                 <div className="relative flex-1">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => updatePlayerName(i, e.target.value)}
                     placeholder={`${t("setup.player")} ${i + 1}`}
-                    className="w-full bg-background border border-white/10 rounded-xl py-3 pl-10 pr-4 font-bold outline-none focus:border-primary transition-all text-sm"
+                    className="w-full bg-background border border-white/10 rounded-xl py-3 ps-10 pr-4 font-bold outline-none focus:border-primary transition-all text-sm"
                   />
                 </div>
                 {players.length > 3 && (
@@ -176,7 +176,7 @@ const GameSetup = ({ onBack, onStart }) => {
                 <p className="text-xs text-muted-foreground font-semibold">{hasTimer ? t("setup.timerOn") : t("setup.timerOff")}</p>
               </div>
             </div>
-            <ToggleSwitch value={hasTimer} onChange={setHasTimer} onHover={() => sfx.hover()} />
+            <ToggleSwitch value={hasTimer} onChange={setHasTimer} onHover={() => sfx.hover()} isRTL={isRTL} />
           </div>
 
           <div className="game-card flex items-center justify-between py-4">
@@ -189,7 +189,7 @@ const GameSetup = ({ onBack, onStart }) => {
                 <p className="text-xs text-muted-foreground font-semibold line-clamp-1">{t("setup.hintDesc")}</p>
               </div>
             </div>
-            <ToggleSwitch value={impostorHint} onChange={setImpostorHint} onHover={() => sfx.hover()} />
+            <ToggleSwitch value={impostorHint} onChange={setImpostorHint} onHover={() => sfx.hover()} isRTL={isRTL} />
           </div>
         </div>
 
@@ -219,7 +219,7 @@ const GameSetup = ({ onBack, onStart }) => {
         </div>
       </motion.div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-5 glass-panel bg-background/80 max-w-md mx-auto z-20">
+      <div className="fixed bottom-0 inset-x-0 p-5 glass-panel bg-background/80 max-w-md mx-auto z-20">
         <motion.button
           whileHover={hoverScale} whileTap={tapScale}
           onClick={handleStart}

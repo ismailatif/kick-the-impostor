@@ -234,7 +234,7 @@ const OnlineGamePlay = ({ onEnd }) => {
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${localVote === i ? 'bg-white/20' : 'bg-primary/10'}`}>
                                     <User className="w-6 h-6" />
                                 </div>
-                                <div className="flex-1 text-left">
+                                <div className="flex-1 text-start">
                                     <p className="text-xl font-bold">{player}</p>
                                 </div>
                             </motion.button>
