@@ -110,6 +110,8 @@ export const translations = {
         "game.confirmVote": "تأكيد التصويت",
         "game.votingStatus": "حالة التصويت",
         "game.playersVoted": "لاعبين صوّتوا",
+        "game.error": "خطأ",
+        "game.notEnoughPlayers": "ليس هناك عدد كافٍ من اللاعبين للمتابعة",
         // Language
         "lang.label": "اللغة",
     },
@@ -220,6 +222,8 @@ export const translations = {
         "game.confirmVote": "Confirm Vote",
         "game.votingStatus": "Voting Status",
         "game.playersVoted": "players voted",
+        "game.error": "Error",
+        "game.notEnoughPlayers": "Not enough players to continue",
         "lang.label": "Language",
     },
     fr: {
@@ -329,6 +333,8 @@ export const translations = {
         "game.confirmVote": "Confirmer le vote",
         "game.votingStatus": "État du vote",
         "game.playersVoted": "joueurs ont voté",
+        "game.error": "Erreur",
+        "game.notEnoughPlayers": "Pas assez de joueurs pour continuer",
         "lang.label": "Langue",
     },
 };
