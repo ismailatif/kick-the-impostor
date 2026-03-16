@@ -1,12 +1,41 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings } from "lucide-react";
+import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings, Lightbulb } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { useSocket } from "@/hooks/useSocketHook";
 import { hoverScale, tapScale, slideUpItem, staggerContainer } from "@/lib/animations";
 import { WORD_BANKS, getCategoryWordBankKey, CATEGORY_KEYS } from "@/i18n/translations";
 import { toast } from "sonner";
+
+// Import category images
+import thingsImg from "@/assets/category/things.png";
+import countriesImg from "@/assets/category/Countries.png";
+import foodImg from "@/assets/category/food.png";
+import animalsImg from "@/assets/category/animals.png";
+import sportsImg from "@/assets/category/sports.png";
+import celebritiesImg from "@/assets/category/Celebrities.png";
+import footballImg from "@/assets/category/footballPlayers.png";
+
+const CATEGORY_IMAGES = {
+    "cat.things": thingsImg,
+    "cat.countries": countriesImg,
+    "cat.food": foodImg,
+    "cat.animals": animalsImg,
+    "cat.sports": sportsImg,
+    "cat.celebrities": celebritiesImg,
+    "cat.football": footballImg
+};
+
+const CATEGORY_STYLES = {
+    "cat.things": { gradient: "from-blue-500 to-indigo-600", shadow: "shadow-blue-500/25" },
+    "cat.countries": { gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/25" },
+    "cat.food": { gradient: "from-orange-500 to-red-600", shadow: "shadow-orange-500/25" },
+    "cat.animals": { gradient: "from-green-500 to-emerald-600", shadow: "shadow-green-500/25" },
+    "cat.sports": { gradient: "from-sky-500 to-blue-600", shadow: "shadow-sky-500/25" },
+    "cat.celebrities": { gradient: "from-purple-500 to-pink-600", shadow: "shadow-purple-500/25" },
+    "cat.football": { gradient: "from-amber-600 to-orange-600", shadow: "shadow-amber-600/25" },
+};
 
 const OnlineLobby = () => {
     const { t, lang } = useLanguage();
@@ -234,17 +263,38 @@ const OnlineLobby = () => {
                                     </button>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{t("setup.chaosDesc")}</p>
-                                {/* Categories */}
-                                <div>
-                                    <label className="block text-sm font-bold text-muted-foreground mb-2">
-                                        {t("setup.categories")}
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
+                                {/* Categories Redesign: Large Illustration Cards */}
+                                <div className="mt-8 space-y-4">
+                                    <div className="flex items-center gap-3 mb-6 px-1">
+                                        <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-lg">
+                                            <Lightbulb className="w-6 h-6 text-primary animate-pulse" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-white tracking-tight leading-none bg-clip-text">
+                                                {t("setup.categories")}
+                                            </h3>
+                                            <p className="text-xs font-bold text-muted-foreground mt-1 uppercase tracking-widest opacity-60">
+                                                {t("setup.categoriesSelected")}: {room.settings?.categories?.length ?? 0}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <motion.div 
+                                        variants={staggerContainer}
+                                        initial="hidden"
+                                        animate="show"
+                                        className="space-y-4"
+                                    >
                                         {CATEGORY_KEYS.map((key) => {
                                             const selected = room.settings?.categories?.includes(key) ?? false;
+                                            const style = CATEGORY_STYLES[key] || CATEGORY_STYLES["cat.things"];
+                                            
                                             return (
-                                                <button
+                                                <motion.button
                                                     key={key}
+                                                    variants={slideUpItem}
+                                                    whileHover={{ scale: 1.02, translateY: -4 }}
+                                                    whileTap={{ scale: 0.98 }}
                                                     type="button"
                                                     onClick={() => {
                                                         const list = room.settings?.categories || [];
@@ -253,20 +303,55 @@ const OnlineLobby = () => {
                                                             : [...list, key];
                                                         handleSettingsChange({ categories: next.length ? next : [] });
                                                     }}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-all ${
+                                                    className={`relative w-full text-right flex items-center p-4 rounded-[28px] border-4 transition-all duration-300 min-h-[100px] overflow-hidden group ${
                                                         selected
-                                                            ? "bg-primary text-primary-foreground border-primary"
-                                                            : "bg-background border-white/20 hover:border-primary/50"
+                                                            ? `bg-gradient-to-br ${style.gradient} border-white/40 ${style.shadow} shadow-2xl scale-[1.02]`
+                                                            : "bg-card/40 border-white/5 hover:border-white/10"
                                                     }`}
                                                 >
-                                                    {t(key)}
-                                                </button>
+                                                    {/* Card Content (Right-to-Left) */}
+                                                    <div className="flex-1 pr-2 relative z-10">
+                                                        <h4 className={`text-xl font-black mb-0.5 transition-colors ${
+                                                            selected ? "text-white" : "text-white/90 group-hover:text-white"
+                                                        }`}>
+                                                            {t(key)}
+                                                        </h4>
+                                                        <p className={`text-xs font-bold leading-tight max-w-[180px] transition-colors ${
+                                                            selected ? "text-white/80" : "text-muted-foreground group-hover:text-white/70"
+                                                        }`}>
+                                                            {t(`${key}.desc`)}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Large Illustration */}
+                                                    <div className="relative w-24 h-24 flex items-center justify-center">
+                                                        {CATEGORY_IMAGES[key] && (
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                {selected && (
+                                                                    <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-125 animate-pulse" />
+                                                                )}
+                                                                <img
+                                                                    src={CATEGORY_IMAGES[key]}
+                                                                    alt=""
+                                                                    className={`w-24 h-24 object-contain transition-all duration-500 drop-shadow-xl ${
+                                                                        selected 
+                                                                            ? "scale-110 rotate-6 translate-x-1 -translate-y-1" 
+                                                                            : "scale-100 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110"
+                                                                    }`}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+
+                                                    {/* Decorative background overlay */}
+                                                    {selected && (
+                                                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] -mr-32 -mt-32 rounded-full" />
+                                                    )}
+                                                </motion.button>
                                             );
                                         })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {t("setup.categoriesSelected")}: {room.settings?.categories?.length ?? 0}
-                                    </p>
+                                    </motion.div>
                                 </div>
                             </div>
                         </motion.div>

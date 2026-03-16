@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { toastStore } from '@/hooks/useCustomToast';
 
 // Individual toast component
-const Toast = ({ toast, onClose }) => {
+const Toast = React.forwardRef(({ toast, onClose }, ref) => {
     const variants = {
         success: { bg: 'bg-emerald-50 dark:bg-emerald-950', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-900 dark:text-emerald-50', icon: CheckCircle2, iconColor: 'text-emerald-600 dark:text-emerald-400' },
         error: { bg: 'bg-red-50 dark:bg-red-950', border: 'border-red-200 dark:border-red-800', text: 'text-red-900 dark:text-red-50', icon: XCircle, iconColor: 'text-red-600 dark:text-red-400' },
@@ -26,6 +26,7 @@ const Toast = ({ toast, onClose }) => {
 
     return (
         <motion.div
+            ref={ref}
             layout
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -82,7 +83,7 @@ const Toast = ({ toast, onClose }) => {
             </button>
         </motion.div>
     );
-};
+});
 
 // Toast container component
 export const CustomToastContainer = () => {
