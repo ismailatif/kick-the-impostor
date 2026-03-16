@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { staggerContainer, slideUpItem, hoverScale, pulseGlow } from "@/lib/animations";
 import { X, Users, Eye, Play, MessageSquare, UserX, MessageCircle, Vote, Video } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -15,11 +15,14 @@ const HowToPlay = ({ isOpen, onClose }) => {
     { number: 6, icon: MessageCircle, text: t("how.step6"), color: "step-card-pink text-game-pink", numBg: "bg-game-pink" },
     { number: 7, icon: Vote, text: t("how.step7"), color: "step-card-yellow text-accent", numBg: "bg-accent text-accent-foreground" },
   ];
+  const dragControls = useDragControls();
   return (<AnimatePresence>
     {isOpen && (<>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40" onClick={onClose} />
       <motion.div
         drag="y"
+        dragControls={dragControls}
+        dragListener={false}
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.5 }}
         onDragEnd={(_, info) => {
@@ -31,8 +34,10 @@ const HowToPlay = ({ isOpen, onClose }) => {
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed bottom-0 left-0 right-0 z-50 glass-panel max-h-[85vh] overflow-y-auto touch-none">
-        <div className="sticky top-0 bg-card/40 backdrop-blur-xl border-b border-white/10 pt-3 pb-2 px-6 rounded-t-3xl z-10 cursor-grab active:cursor-grabbing">
+        className="fixed bottom-0 left-0 right-0 z-50 glass-panel max-h-[85vh] overflow-y-auto">
+        <div 
+          onPointerDown={(e) => dragControls.start(e)}
+          className="sticky top-0 bg-card/40 backdrop-blur-xl border-b border-white/10 pt-3 pb-2 px-6 rounded-t-3xl z-10 cursor-grab active:cursor-grabbing">
           <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4" />
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => { sfx.click(); onClose(); }} onMouseEnter={() => sfx.hover()} className="p-2 transition-transform hover:scale-110">

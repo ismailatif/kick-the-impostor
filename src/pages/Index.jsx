@@ -180,7 +180,7 @@ const Index = () => {
 
       {screen === "home" && (
         <motion.div key="home" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="min-h-screen flex flex-col items-center justify-center px-5 relative overflow-hidden">
-          <div className="absolute top-6 left-5 flex gap-3">
+          <div className="absolute top-6 left-5 flex gap-3 z-20" dir="ltr">
             <motion.button
               whileHover={hoverScale}
               onMouseEnter={() => sfx.hover()}
@@ -200,7 +200,7 @@ const Index = () => {
             </motion.button>
           </div>
 
-          <div className="absolute top-6 right-5">
+          <div className="absolute top-6 right-5 z-20" dir="ltr">
             <LanguageSwitcher />
           </div>
 
