@@ -107,6 +107,9 @@ export const translations = {
         "game.holdHint": "اضغط مطولاً لمعرفة دورك",
         "game.revealImpostor": "كشف المحتال",
         "game.revealTruth": "كشف الحقيقة",
+        "game.confirmVote": "تأكيد التصويت",
+        "game.votingStatus": "حالة التصويت",
+        "game.playersVoted": "لاعبين صوّتوا",
         // Language
         "lang.label": "اللغة",
     },
@@ -214,6 +217,9 @@ export const translations = {
         "game.holdHint": "Hold to peek at your role",
         "game.revealImpostor": "Reveal Impostor",
         "game.revealTruth": "Reveal the Truth",
+        "game.confirmVote": "Confirm Vote",
+        "game.votingStatus": "Voting Status",
+        "game.playersVoted": "players voted",
         "lang.label": "Language",
     },
     fr: {
@@ -320,6 +326,9 @@ export const translations = {
         "game.holdHint": "Maintenez pour voir votre rôle",
         "game.revealImpostor": "Révéler l'Imposteur",
         "game.revealTruth": "Révéler la Vérité",
+        "game.confirmVote": "Confirmer le vote",
+        "game.votingStatus": "État du vote",
+        "game.playersVoted": "joueurs ont voté",
         "lang.label": "Langue",
     },
 };

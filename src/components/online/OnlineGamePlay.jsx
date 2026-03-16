@@ -19,6 +19,7 @@ const OnlineGamePlay = ({ onEnd }) => {
     const [isRevealed, setIsRevealed] = useState(false);
     const [holdProgress, setHoldProgress] = useState(0);
     const [localVote, setLocalVote] = useState(null);
+    const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
 
     const audioRef = useRef(null);
@@ -91,9 +92,15 @@ const OnlineGamePlay = ({ onEnd }) => {
 
     const handleVote = (index) => {
         if (localVote !== null) return;
+        sfx.click();
+        setSelectedCandidate(index);
+    };
+
+    const handleConfirmVote = () => {
+        if (selectedCandidate === null || localVote !== null) return;
         sfx.vote();
-        setLocalVote(index);
-        submitVote(room.code, index);
+        setLocalVote(selectedCandidate);
+        submitVote(room.code, selectedCandidate);
     };
 
     // REVEAL PHASE
@@ -229,24 +236,64 @@ const OnlineGamePlay = ({ onEnd }) => {
                                 whileTap={tapScale}
                                 disabled={localVote !== null}
                                 onClick={() => handleVote(i)}
-                                className={`w-full game-card border-white/20 flex items-center gap-4 py-4 px-6 transition-all shadow-md ${localVote === i ? 'bg-primary border-primary text-white' : 'bg-card/80 hover:bg-card border-white/10 opacity-70'}`}
+                                className={`w-full game-card border-4 flex items-center gap-4 py-4 px-6 transition-all shadow-md ${
+                                    localVote === i 
+                                        ? 'bg-primary border-white text-white shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]' 
+                                        : selectedCandidate === i
+                                            ? 'bg-primary/20 border-primary text-primary scale-[1.02]'
+                                            : 'bg-card/80 hover:bg-card border-white/10 opacity-70'
+                                }`}
                             >
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${localVote === i ? 'bg-white/20' : 'bg-primary/10'}`}>
-                                    <User className="w-6 h-6" />
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${localVote === i || selectedCandidate === i ? 'bg-white/20' : 'bg-primary/10'}`}>
+                                    <User className={`w-6 h-6 ${selectedCandidate === i && localVote === null ? 'text-primary' : ''}`} />
                                 </div>
                                 <div className="flex-1 text-start">
-                                    <p className="text-xl font-bold">{player}</p>
+                                    <p className={`text-xl font-bold ${selectedCandidate === i && localVote === null ? 'text-primary' : ''}`}>{player}</p>
                                 </div>
                             </motion.button>
                         )
                     ))}
                 </div>
 
+                {selectedCandidate !== null && localVote === null && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-8 max-w-sm mx-auto"
+                    >
+                        <button
+                            onClick={handleConfirmVote}
+                            className="w-full bg-primary text-white py-4 rounded-2xl font-black text-xl shadow-[0_0_30px_rgba(var(--primary-rgb),0.4)] animate-pulse"
+                        >
+                            {t("game.confirmVote")}
+                        </button>
+                    </motion.div>
+                )}
+
+                <div className="mt-8 text-center bg-card/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 max-w-sm mx-auto">
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                        {t("game.votingStatus")}
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                        <div className="text-2xl font-black text-primary">
+                            {votedPlayers.length} / {room.players.length}
+                        </div>
+                        <p className="text-xs font-bold text-muted-foreground">
+                            {t("game.playersVoted")}
+                        </p>
+                    </div>
+                </div>
+
                 {isHost && (
                     <motion.button
                         whileHover={hoverScale} whileTap={tapScale}
+                        disabled={votedPlayers.length < room.players.length}
                         onClick={handleNextPhase}
-                        className="mt-12 w-full max-w-sm mx-auto block glass-button py-4 rounded-2xl font-bold text-xl shadow-game"
+                        className={`mt-8 w-full max-w-sm mx-auto block glass-button py-4 rounded-2xl font-bold text-xl shadow-game transition-all ${
+                            votedPlayers.length < room.players.length 
+                                ? 'opacity-50 grayscale cursor-not-allowed scale-95' 
+                                : 'shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]'
+                        }`}
                     >
                         {t("game.revealTruth")}
                     </motion.button>
