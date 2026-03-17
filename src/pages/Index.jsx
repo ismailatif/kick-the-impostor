@@ -130,6 +130,7 @@ const Index = () => {
         <motion.div key="setup" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
           <GameSetup
             onBack={() => { sfx.click(); setScreen("mode-selection"); }}
+            initialConfig={gameConfig}
             onStart={(config) => {
               setGameConfig(config);
               setScreen("play");
@@ -174,7 +175,11 @@ const Index = () => {
 
       {screen === "play" && gameConfig && (
         <motion.div key="game" variants={pageTransition} initial="initial" animate="animate" exit="exit" className="absolute top-0 left-0 w-full min-h-screen">
-          <GamePlay config={gameConfig} onEnd={() => { sfx.click(); setScreen("home"); }} />
+          <GamePlay 
+            config={gameConfig} 
+            onEnd={() => { sfx.click(); setScreen("home"); }} 
+            onSettings={() => { sfx.click(); setScreen("setup"); }}
+          />
         </motion.div>
       )}
 

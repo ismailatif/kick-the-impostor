@@ -91,6 +91,7 @@ export const translations = {
         "game.impostorWas": "المحتال كان: {names}",
         "game.menu": "القائمة",
         "game.newRound": "جولة جديدة",
+        "game.settings": "الإعدادات",
         // How to play
         "how.title": "طريقة اللعب",
         "how.step1": "اجمع 3-20 من الأصدقاء ومرروا الهاتف بينكم",
@@ -206,6 +207,7 @@ export const translations = {
         "game.impostorWas": "The impostor was: {names}",
         "game.menu": "Menu",
         "game.newRound": "New Round",
+        "game.settings": "Settings",
         "how.title": "How to Play",
         "how.step1": "Gather 3-20 friends and pass the phone around",
         "how.step2": "Each player long-presses to reveal the secret word - except one who will see 'You are the Impostor'",
@@ -319,6 +321,7 @@ export const translations = {
         "game.impostorWas": "L'imposteur était : {names}",
         "game.menu": "Menu",
         "game.newRound": "Nouvelle manche",
+        "game.settings": "Paramètres",
         "how.title": "Comment jouer",
         "how.step1": "Rassemblez 3 à 20 amis et passez le téléphone",
         "how.step2": "Chaque joueur appuie longuement pour révéler le mot secret - sauf un qui verra 'Vous êtes l'Imposteur'",

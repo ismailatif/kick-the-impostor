@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUpItem, hoverScale, tapScale, pulseGlow, shake, breathing, flip, revealCard } from "@/lib/animations";
 import { triggerPremiumCelebration, triggerErrorBurst } from "@/lib/confetti";
-import { Eye, EyeOff, ArrowLeft, ArrowRight, RotateCcw, Vote, Crown, Mic, VolumeX, Volume2, User } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, ArrowRight, RotateCcw, Vote, Crown, Mic, VolumeX, Volume2, User, Sliders } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { WORD_BANKS, getCategoryWordBankKey } from "@/i18n/translations";
-const GamePlay = ({ config, onEnd }) => {
+const GamePlay = ({ config, onEnd, onSettings }) => {
   const { t, lang, isRTL } = useLanguage();
   const [phase, setPhase] = useState("reveal"); // "reveal" | "pass" | "speaking" | "discussion" | "suspense" | "result"
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -18,7 +18,7 @@ const GamePlay = ({ config, onEnd }) => {
   const holdTimerRef = useRef(null);
   const { sfx, playBGM, isMuted, setIsMuted, toggleMute } = useAudio();
 
-  const [impostorIndices] = useState(() => {
+  const generateIndices = useCallback(() => {
     const indices = [];
     const count = config.chaosMode
       ? Math.floor(Math.random() * (config.players.length + 1))
@@ -29,9 +29,9 @@ const GamePlay = ({ config, onEnd }) => {
         indices.push(idx);
     }
     return indices;
-  });
+  }, [config.chaosMode, config.impostorCount, config.players.length]);
 
-  const [{ secretWord, selectedCategory }] = useState(() => {
+  const pickWord = useCallback(() => {
     const catKey = config.categories[Math.floor(Math.random() * config.categories.length)];
     const wordBankKey = getCategoryWordBankKey(lang, catKey);
     const banks = WORD_BANKS[lang];
@@ -40,7 +40,33 @@ const GamePlay = ({ config, onEnd }) => {
       secretWord: words[Math.floor(Math.random() * words.length)],
       selectedCategory: catKey
     };
-  });
+  }, [config.categories, lang]);
+
+  const [impostorIndices, setImpostorIndices] = useState(() => generateIndices());
+  const [{ secretWord, selectedCategory }, setGameData] = useState(() => pickWord());
+
+  const handleNewRound = () => {
+    sfx.click();
+    sfx.vibrate();
+    
+    // Cleanup audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    // Reset game state
+    setPhase("reveal");
+    setCurrentPlayerIndex(0);
+    setIsRevealed(false);
+    setHoldProgress(0);
+    setVotes({});
+    setTimeLeft(config.hasTimer ? (config.timerDuration || 120) : null);
+    
+    // Pick new data
+    setImpostorIndices(generateIndices());
+    setGameData(pickWord());
+  };
 
   const isImpostor = impostorIndices.includes(currentPlayerIndex);
 
@@ -378,10 +404,7 @@ const GamePlay = ({ config, onEnd }) => {
                     setCurrentPlayerIndex(currentPlayerIndex + 1);
                   } else {
                     playBGM('none');
-                    setPhase("suspense");
-                    setTimeout(() => {
-                      setPhase("result");
-                    }, 3000);
+                    setPhase("result");
                   }
                 }}
                 className={`w-full game-card border-white/20 flex items-center gap-4 py-4 px-6 bg-card/80 hover:bg-card hover:border-primary/40 transition-all shadow-md active:scale-95 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}
@@ -403,20 +426,6 @@ const GamePlay = ({ config, onEnd }) => {
     );
   }
 
-
-  // SUSPENSE PHASE
-  if (phase === "suspense") {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 text-center">
-        <motion.div animate={breathing} className="absolute inset-0 bg-primary/5 z-0" />
-        <div className="relative z-10">
-          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-8 border-4 border-primary border-t-transparent animate-spin" />
-          <h2 className="text-4xl font-black mb-4 uppercase italic tracking-tighter">{t("game.calculating")}...</h2>
-          <p className="text-muted-foreground font-bold">{t("game.truthReveal")}</p>
-        </div>
-      </div>
-    );
-  }
 
   // RESULT PHASE
   const separator = lang === "ar" ? "، " : ", ";
@@ -445,12 +454,18 @@ const GamePlay = ({ config, onEnd }) => {
           <p className="text-4xl font-black text-primary drop-shadow-sm italic">{secretWord}</p>
         </motion.div>
 
-        <div className="flex gap-4">
-          <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => { sfx.click(); onEnd(); }} className="flex-1 bg-card border border-white/20 text-foreground py-5 rounded-2xl font-black flex items-center justify-center gap-2 shadow-md">
-            <MenuIcon className="w-5 h-5" />
-            {t("game.menu")}
-          </motion.button>
-          <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => { sfx.click(); sfx.vibrate(); window.location.reload(); }} className="flex-1 glass-button py-5 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg">
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3">
+            <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => { sfx.click(); onEnd(); }} className="flex-1 bg-card border border-white/20 text-foreground py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-md text-sm">
+              <MenuIcon className="w-4 h-4" />
+              {t("game.menu")}
+            </motion.button>
+            <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => { sfx.click(); onSettings(); }} className="flex-1 bg-card border border-white/20 text-foreground py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-md text-sm">
+              <Sliders className="w-4 h-4 text-primary" />
+              {t("game.settings")}
+            </motion.button>
+          </div>
+          <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleNewRound} className="w-full glass-button py-5 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg">
             <RotateCcw className="w-5 h-5" />
             {t("game.newRound")}
           </motion.button>

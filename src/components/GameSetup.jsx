@@ -52,18 +52,18 @@ const ToggleSwitch = ({ value, onChange, onHover, isRTL }) => (
   </motion.button>
 );
 
-const GameSetup = ({ onBack, onStart }) => {
+const GameSetup = ({ onBack, onStart, initialConfig }) => {
   const { t, isRTL } = useLanguage();
   const { sfx } = useAudio();
 
-  const [players, setPlayers] = useState(["", "", ""]);
-  const [impostorCount, setImpostorCount] = useState(1);
-  const [hasTimer, setHasTimer] = useState(true);
-  const [timerDuration, setTimerDuration] = useState(120);
+  const [players, setPlayers] = useState(initialConfig?.players || ["", "", ""]);
+  const [impostorCount, setImpostorCount] = useState(initialConfig?.impostorCount || 1);
+  const [hasTimer, setHasTimer] = useState(initialConfig?.hasTimer !== undefined ? initialConfig.hasTimer : true);
+  const [timerDuration, setTimerDuration] = useState(initialConfig?.timerDuration || 120);
   const [isModifyingTimer, setIsModifyingTimer] = useState(false);
-  const [impostorHint, setImpostorHint] = useState(true);
-  const [chaosMode, setChaosMode] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([...CATEGORY_KEYS]);
+  const [impostorHint, setImpostorHint] = useState(initialConfig?.impostorHint !== undefined ? initialConfig.impostorHint : true);
+  const [chaosMode, setChaosMode] = useState(initialConfig?.chaosMode !== undefined ? initialConfig.chaosMode : false);
+  const [selectedCategories, setSelectedCategories] = useState(initialConfig?.categories || [...CATEGORY_KEYS]);
 
   const addPlayer = () => {
     if (players.length < 20) {
