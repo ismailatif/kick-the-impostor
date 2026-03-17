@@ -100,6 +100,11 @@ export const SocketProvider = ({ children }) => {
                 setOnlinePhase(phase);
             });
 
+            newSocket.on('game-reset', () => {
+                console.log('Game reset triggered by host');
+                resetGame();
+            });
+
             // Vote events
             newSocket.on('vote-recorded', ({ playerId }) => {
                 console.log('Vote recorded from:', playerId);
@@ -225,6 +230,15 @@ export const SocketProvider = ({ children }) => {
         setVoteResults(null);
     }, []);
 
+    const emitResetGame = useCallback((code) => {
+        if (!socket) return;
+        try {
+            socket.emit('reset-game', { code });
+        } catch (error) {
+            console.error('Error emitting reset-game:', error);
+        }
+    }, [socket]);
+
     return (
         <SocketContext.Provider value={{
             socket,
@@ -241,7 +255,8 @@ export const SocketProvider = ({ children }) => {
             startGame,
             syncPhase,
             submitVote,
-            resetGame
+            resetGame,
+            emitResetGame
         }}>
             {children}
         </SocketContext.Provider>

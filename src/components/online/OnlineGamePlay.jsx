@@ -16,7 +16,7 @@ import { useCustomToast } from "@/hooks/useCustomToast";
 const OnlineGamePlay = ({ onEnd }) => {
     const { t, isRTL } = useLanguage();
     const { sfx, playBGM, isMuted, toggleMute } = useAudio();
-    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, setReady, resetGame, submitVote } = useSocket();
+    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, setReady, resetGame, submitVote, emitResetGame } = useSocket();
     const toast = useCustomToast();
 
     const [isRevealed, setIsRevealed] = useState(false);
@@ -106,7 +106,7 @@ const OnlineGamePlay = ({ onEnd }) => {
     const handleNextPhase = () => {
         if (!isHost) return;
         sfx.click();
-        const phases = ['reveal', 'speaking', 'discussion', 'vote', 'suspense', 'result'];
+        const phases = ['reveal', 'discussion', 'vote', 'result'];
         const currentIndex = phases.indexOf(onlinePhase);
         if (currentIndex < phases.length - 1) {
             syncPhase(room.code, phases[currentIndex + 1]);
@@ -168,7 +168,6 @@ const OnlineGamePlay = ({ onEnd }) => {
                                         </div>
                                     )}
                                 </motion.div>
-                                <p className="text-muted-foreground font-semibold mb-2">{t("game.understood")}</p>
                             </motion.div>
                         ) : (
                             <motion.div key="hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative flex flex-col items-center">
@@ -250,7 +249,6 @@ const OnlineGamePlay = ({ onEnd }) => {
                             />
                         </svg>
                     )}
-
                     <div className="relative z-20 flex flex-col items-center justify-center text-center w-full px-6">
                         <motion.div animate={isUrgent ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : pulseGlow} transition={isUrgent ? { repeat: Infinity, duration: 0.5 } : {}} className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner ${isUrgent ? 'bg-destructive/20 border-destructive/30' : 'bg-accent/20 border-accent/30'}`}>
                             <Mic className={`w-8 h-8 ${isUrgent ? 'text-destructive' : 'text-accent-foreground'}`} />
@@ -437,8 +435,13 @@ const OnlineGamePlay = ({ onEnd }) => {
                             whileTap={tapScale}
                             onClick={() => {
                                 sfx.click();
-                                resetGame();
-                                setReady(room.code, false);
+                                if (isHost) {
+                                    emitResetGame(room.code);
+                                } else {
+                                    // For non-hosts, just move back to lobby state locally
+                                    // but usually the host will trigger the sync for everyone
+                                    resetGame();
+                                }
                             }}
                             className="flex-1 glass-button py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg text-lg"
                         >

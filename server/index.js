@@ -136,7 +136,7 @@ io.on('connection', (socket) => {
                 return emitError(socket, ErrorTypes.ROOM_NOT_FOUND, 'ROOM_NOT_FOUND');
             }
 
-            if (room.status !== 'lobby') {
+            if (room.status === 'playing') {
                 return emitError(socket, ErrorTypes.GAME_IN_PROGRESS, 'GAME_IN_PROGRESS');
             }
 
@@ -252,6 +252,33 @@ io.on('connection', (socket) => {
             console.log(`Game started in room ${code}`);
         } catch (error) {
             console.error('Error in start-game:', error);
+            emitError(socket, ErrorTypes.INVALID_INPUT);
+        }
+    });
+
+    // ================== Reset Game ==================
+    socket.on('reset-game', ({ code }) => {
+        try {
+            const room = rooms.get(code);
+
+            if (!room) {
+                return emitError(socket, ErrorTypes.ROOM_NOT_FOUND, 'ROOM_NOT_FOUND');
+            }
+
+            if (room.hostId !== socket.id) {
+                return emitError(socket, ErrorTypes.NOT_HOST, 'NOT_HOST');
+            }
+
+            room.status = 'lobby';
+            room.gameData = null;
+            room.votes = {};
+            room.players.forEach(p => p.ready = false);
+
+            broadcastRoomUpdate(code, room);
+            io.to(code).emit('game-reset');
+            console.log(`Game reset to lobby for room ${code}`);
+        } catch (error) {
+            console.error('Error in reset-game:', error);
             emitError(socket, ErrorTypes.INVALID_INPUT);
         }
     });
