@@ -13,7 +13,7 @@ const GamePlay = ({ config, onEnd }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
   const [votes, setVotes] = useState({});
-  const [timeLeft, setTimeLeft] = useState(config.hasTimer ? 120 : null);
+  const [timeLeft, setTimeLeft] = useState(config.hasTimer ? (config.timerDuration || 120) : null);
   const audioRef = useRef(null);
   const holdTimerRef = useRef(null);
   const { sfx, playBGM, isMuted, setIsMuted, toggleMute } = useAudio();
@@ -85,7 +85,7 @@ const GamePlay = ({ config, onEnd }) => {
       setCurrentPlayerIndex(currentPlayerIndex + 1);
     } else {
       setCurrentPlayerIndex(0);
-      if (config.hasTimer) setTimeLeft(120);
+      if (config.hasTimer) setTimeLeft(config.timerDuration || 120);
       setPhase("speaking");
       playBGM('suspense');
       if (!audioRef.current && !isMuted) {
@@ -269,7 +269,7 @@ const GamePlay = ({ config, onEnd }) => {
 
   // SPEAKING PHASE
   if (phase === "speaking") {
-    const totalTime = 120;
+    const totalTime = config.timerDuration || 120;
     const progress = timeLeft !== null ? timeLeft / totalTime : 1;
     const radius = 150;
     const circumference = 2 * Math.PI * radius;
@@ -308,7 +308,7 @@ const GamePlay = ({ config, onEnd }) => {
             <h2 className="text-xl font-black mb-1 text-foreground/70 tracking-tight uppercase">{t("game.speakingTime")}</h2>
             <p className="text-3xl font-black text-foreground drop-shadow-md mb-2">{config.players[currentPlayerIndex]}</p>
             {timeLeft !== null && (
-              <div className={`text-5xl font-black font-mono tracking-tighter ${isUrgent ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
+              <div className={`text-5xl font-black font-mono tracking-tighter tabular-nums min-w-[140px] text-center ${isUrgent ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
                 {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
               </div>
             )}

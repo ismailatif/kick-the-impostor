@@ -303,6 +303,26 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ================== Sync Timer ==================
+    socket.on('update-timer', ({ code, timeLeft }) => {
+        try {
+            const room = rooms.get(code);
+
+            if (!room) {
+                return emitError(socket, ErrorTypes.ROOM_NOT_FOUND, 'ROOM_NOT_FOUND');
+            }
+
+            if (room.hostId !== socket.id) {
+                return emitError(socket, ErrorTypes.NOT_HOST, 'NOT_HOST');
+            }
+
+            io.to(code).emit('timer-updated', timeLeft);
+        } catch (error) {
+            console.error('Error in update-timer:', error);
+            emitError(socket, ErrorTypes.INVALID_INPUT);
+        }
+    });
+
     // ================== Submit Vote ==================
     socket.on('submit-vote', ({ code, votedIndex }) => {
         try {

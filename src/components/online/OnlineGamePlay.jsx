@@ -49,7 +49,7 @@ const OnlineGamePlay = ({ onEnd }) => {
     useEffect(() => {
         if (onlinePhase === 'speaking' || onlinePhase === 'discussion') {
             playBGM('suspense');
-            if (room?.settings.hasTimer) setTimeLeft(120);
+            if (room?.settings.hasTimer) setTimeLeft(room?.settings.timerDuration || 120);
         } else if (onlinePhase === 'result') {
             playBGM('none');
             const correctGuess = voteResults?.impostorCaught ?? false;
@@ -215,7 +215,7 @@ const OnlineGamePlay = ({ onEnd }) => {
 
     // Common UI for Speaking/Discussion
     if (onlinePhase === "speaking" || onlinePhase === "discussion") {
-        const totalTime = 120;
+        const totalTime = room?.settings?.timerDuration || 120;
         const progress = timeLeft !== null ? timeLeft / totalTime : 1;
         const radius = 150;
         const circumference = 2 * Math.PI * radius;
@@ -255,7 +255,7 @@ const OnlineGamePlay = ({ onEnd }) => {
                         </motion.div>
                         <p className="text-xl font-bold text-muted-foreground mb-4">{t("game.discussionDesc")}</p>
                         {timeLeft !== null && (
-                            <div className={`text-5xl font-black font-mono tracking-tighter ${isUrgent ? 'text-destructive animate-pulse' : 'text-primary'}`}>
+                            <div className={`text-5xl font-black font-mono tracking-tighter tabular-nums min-w-[140px] text-center ${isUrgent ? 'text-destructive animate-pulse' : 'text-primary'}`}>
                                 {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                             </div>
                         )}

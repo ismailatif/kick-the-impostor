@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUpItem, hoverScale, tapScale } from "@/lib/animations";
-import { ChevronRight, ChevronLeft, Users, UserX, Clock, Lightbulb, Play, Plus, Minus, User } from "lucide-react";
+import { ChevronRight, ChevronLeft, Users, UserX, Clock, Lightbulb, Play, Plus, Minus, User, Settings2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { toast } from "sonner";
@@ -59,6 +59,8 @@ const GameSetup = ({ onBack, onStart }) => {
   const [players, setPlayers] = useState(["", "", ""]);
   const [impostorCount, setImpostorCount] = useState(1);
   const [hasTimer, setHasTimer] = useState(true);
+  const [timerDuration, setTimerDuration] = useState(120);
+  const [isModifyingTimer, setIsModifyingTimer] = useState(false);
   const [impostorHint, setImpostorHint] = useState(true);
   const [chaosMode, setChaosMode] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([...CATEGORY_KEYS]);
@@ -98,6 +100,12 @@ const GameSetup = ({ onBack, onStart }) => {
     }
   };
 
+  const handleAdjustTimer = (amount) => {
+    sfx.click();
+    sfx.vibrate();
+    setTimerDuration(prev => Math.max(15, prev + amount));
+  };
+
   const handleStart = () => {
     const finalPlayers = players.map((p, i) => p.trim() || `${t("setup.player")} ${i + 1}`);
 
@@ -114,6 +122,7 @@ const GameSetup = ({ onBack, onStart }) => {
       players: finalPlayers,
       impostorCount,
       hasTimer,
+      timerDuration,
       impostorHint,
       chaosMode,
       categories: selectedCategories
@@ -261,18 +270,66 @@ const GameSetup = ({ onBack, onStart }) => {
 
         {/* Game Settings */}
         <div className="grid grid-cols-1 gap-4">
-          <div className="game-card flex items-center justify-between py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
-                <Clock className="w-5 h-5 text-orange-500" />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                    <Clock className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-bold">{t("setup.timer")}</p>
+                    <p className="text-xs text-muted-foreground font-semibold">
+                      {hasTimer 
+                        ? <span dir="ltr">{Math.floor(timerDuration / 60)}:{(timerDuration % 60).toString().padStart(2, '0')}</span>
+                        : t("setup.timerOff")
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasTimer && (
+                    <motion.button
+                      whileHover={hoverScale}
+                      whileTap={tapScale}
+                      onClick={() => { sfx.click(); setIsModifyingTimer(!isModifyingTimer); }}
+                      className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${isModifyingTimer ? 'bg-primary border-primary text-white shadow-lg' : 'bg-card border-white/20 text-muted-foreground'}`}
+                      title={t("setup.modify") || "Modify"}
+                    >
+                      <Settings2 className={`w-4 h-4 ${isModifyingTimer ? 'animate-spin-slow' : ''}`} />
+                    </motion.button>
+                  )}
+                  <ToggleSwitch value={hasTimer} onChange={(val) => { setHasTimer(val); if (!val) setIsModifyingTimer(false); }} onHover={() => sfx.hover()} isRTL={isRTL} />
+                </div>
               </div>
-              <div>
-                <p className="font-bold">{t("setup.timer")}</p>
-                <p className="text-xs text-muted-foreground font-semibold">{hasTimer ? t("setup.timerOn") : t("setup.timerOff")}</p>
-              </div>
+              
+              <AnimatePresence>
+                {hasTimer && isModifyingTimer && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="flex items-center justify-between pt-2 border-t border-white/5"
+                  >
+                    <span className="text-sm font-bold text-muted-foreground">{t("setup.duration") || "Duration"}</span>
+                    <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-1">
+                      <button
+                        onClick={() => handleAdjustTimer(-15)}
+                        className="w-8 h-8 flex items-center justify-center bg-card rounded-lg shadow-sm">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-16 text-center font-black text-base tabular-nums" dir="ltr">
+                        {Math.floor(timerDuration / 60)}:{(timerDuration % 60).toString().padStart(2, '0')}
+                      </span>
+                      <button
+                        onClick={() => handleAdjustTimer(15)}
+                        className="w-8 h-8 flex items-center justify-center bg-card rounded-lg shadow-sm">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <ToggleSwitch value={hasTimer} onChange={setHasTimer} onHover={() => sfx.hover()} isRTL={isRTL} />
-          </div>
 
           <div className="game-card flex items-center justify-between py-4">
             <div className="flex items-center gap-3">

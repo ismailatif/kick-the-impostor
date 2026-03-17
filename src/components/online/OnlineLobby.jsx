@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings, Lightbulb } from "lucide-react";
+import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings, Lightbulb, Plus, Minus, Clock, Settings2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { useSocket } from "@/hooks/useSocketHook";
@@ -42,6 +42,7 @@ const OnlineLobby = () => {
     const { sfx } = useAudio();
     const { room, socket, updateSettings, setReady, startGame } = useSocket();
     const [settingsOpen, setSettingsOpen] = useState(true);
+    const [isModifyingTimer, setIsModifyingTimer] = useState(false);
 
     const isHost = room?.hostId === socket?.id;
     const everyoneReady = room?.players?.length >= 3 && room?.players?.every((p) => {
@@ -56,8 +57,23 @@ const OnlineLobby = () => {
 
     // Ensure at least one category is selected by default (host only)
     useEffect(() => {
-        if (isHost && settingsOpen && (!room?.settings?.categories || room.settings.categories.length === 0)) {
-            handleSettingsChange({ categories: [CATEGORY_KEYS[0]] });
+        if (isHost && settingsOpen) {
+            const updates = {};
+            let needsUpdate = false;
+
+            if (!room?.settings?.categories || room.settings.categories.length === 0) {
+                updates.categories = [CATEGORY_KEYS[0]];
+                needsUpdate = true;
+            }
+
+            if (room?.settings?.hasTimer && (room.settings.timerDuration === undefined || room.settings.timerDuration === null)) {
+                updates.timerDuration = 120;
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                handleSettingsChange(updates);
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isHost, settingsOpen]);
@@ -205,26 +221,90 @@ const OnlineLobby = () => {
                                     </div>
                                 </div>
                                 {/* Timer */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold">{t("setup.timer")}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSettingsChange({ hasTimer: !room.settings?.hasTimer })}
-                                        className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${
-                                            room.settings?.hasTimer ? "bg-primary" : "bg-muted"
-                                        }`}
-                                    >
-                                        <span className="sr-only">{room.settings?.hasTimer ? "On" : "Off"}</span>
-                                        <span
-                                            className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
-                                                room.settings?.hasTimer ? (lang === 'ar' ? "-translate-x-5" : "translate-x-5") : "translate-x-0"
-                                            }`}
-                                        ></span>
-                                    </button>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-sm font-bold">{t("setup.timer")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {room.settings?.hasTimer && isHost && (
+                                                <motion.button
+                                                    whileHover={hoverScale}
+                                                    whileTap={tapScale}
+                                                    type="button"
+                                                    onClick={() => { sfx.click(); setIsModifyingTimer(!isModifyingTimer); }}
+                                                    className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${isModifyingTimer ? 'bg-primary border-primary text-white shadow-lg' : 'bg-card border-white/20 text-muted-foreground'}`}
+                                                >
+                                                    <Settings2 className={`w-4 h-4 ${isModifyingTimer ? 'animate-spin-slow' : ''}`} />
+                                                </motion.button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => { 
+                                                    const newVal = !room.settings?.hasTimer;
+                                                    handleSettingsChange({ hasTimer: newVal });
+                                                    if (!newVal) setIsModifyingTimer(false);
+                                                }}
+                                                className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${
+                                                    room.settings?.hasTimer ? "bg-primary" : "bg-muted"
+                                                }`}
+                                            >
+                                                <span className="sr-only">{room.settings?.hasTimer ? "On" : "Off"}</span>
+                                                <span
+                                                    className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                                                        room.settings?.hasTimer ? (lang === 'ar' ? "-translate-x-5" : "translate-x-5") : "translate-x-0"
+                                                    }`}
+                                                ></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        {room.settings?.hasTimer 
+                                            ? <span dir="ltr">{Math.floor((room.settings.timerDuration || 120) / 60)}: {((room.settings.timerDuration || 120) % 60).toString().padStart(2, '0')}</span>
+                                            : t("setup.timerOff")
+                                        }
+                                    </p>
+                                    
+                                    <AnimatePresence>
+                                        {room.settings?.hasTimer && isModifyingTimer && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="flex items-center justify-between pt-2 border-t border-white/5"
+                                            >
+                                                <span className="text-xs font-bold text-muted-foreground">{t("setup.duration") || "Duration"}</span>
+                                                <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            sfx.click();
+                                                            sfx.vibrate();
+                                                            const newTime = Math.max(15, (room.settings.timerDuration || 120) - 15);
+                                                            handleSettingsChange({ timerDuration: newTime });
+                                                        }}
+                                                        className="w-8 h-8 flex items-center justify-center bg-card rounded-lg shadow-sm">
+                                                        <Minus className="w-4 h-4" />
+                                                    </button>
+                                                    <span className="w-16 text-center font-black text-base tabular-nums" dir="ltr">
+                                                        {Math.floor((room.settings.timerDuration || 120) / 60)}:{( (room.settings.timerDuration || 120) % 60).toString().padStart(2, '0')}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            sfx.click();
+                                                            sfx.vibrate();
+                                                            const newTime = (room.settings.timerDuration || 120) + 15;
+                                                            handleSettingsChange({ timerDuration: newTime });
+                                                        }}
+                                                        className="w-8 h-8 flex items-center justify-center bg-card rounded-lg shadow-sm">
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    {room.settings?.hasTimer ? t("setup.timerOn") : t("setup.timerOff")}
-                                </p>
                                 {/* Impostor hint */}
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-bold">{t("setup.hint")}</span>
