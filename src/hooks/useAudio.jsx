@@ -3,7 +3,21 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 const AudioContext = createContext(null);
 
 export const AudioProvider = ({ children }) => {
-    const [isMuted, setIsMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(() => {
+        try {
+            const saved = localStorage.getItem("mute");
+            return saved === "true";
+        } catch (e) {
+            return false;
+        }
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem("mute", isMuted);
+        } catch (e) {}
+    }, [isMuted]);
+
     const audioCtxRef = useRef(null);
 
     // BGM refs
