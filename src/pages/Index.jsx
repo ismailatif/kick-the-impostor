@@ -75,6 +75,7 @@ const Index = () => {
   };
 
   const toggleTheme = (event) => {
+    sfx.click();
     const x = event.clientX;
     const y = event.clientY;
     const endRadius = Math.hypot(
