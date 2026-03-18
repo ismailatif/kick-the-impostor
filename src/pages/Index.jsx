@@ -59,12 +59,14 @@ const Index = () => {
 
   const handleStartClick = () => {
     sfx.click();
+    sfx.vibrate(100);
     playBGM('lobby');
     setScreen("mode-selection");
   };
 
   const handleHowToClick = () => {
     sfx.click();
+    sfx.vibrate(80);
     playBGM('lobby');
     setShowHowTo(true);
   };

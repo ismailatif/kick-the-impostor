@@ -72,10 +72,10 @@ export const AudioProvider = ({ children }) => {
         hover: () => playTone(600, 'sine', 0.05, 0.02),
         click: () => {
             playTone(400, 'triangle', 0.1, 0.05);
-            sfx.vibrate();
+            sfx.vibrate(40);
         },
         success: () => {
-            sfx.vibrate();
+            sfx.vibrate(100);
             if (isMuted) return;
             playTone(523.25, 'sine', 0.2, 0.05); // C5
             setTimeout(() => playTone(659.25, 'sine', 0.4, 0.05), 100); // E5
@@ -83,23 +83,23 @@ export const AudioProvider = ({ children }) => {
         },
         tick: () => playTone(1000, 'square', 0.02, 0.02),
         error: () => {
-            sfx.vibrate();
+            sfx.vibrate(100);
             playTone(150, 'sawtooth', 0.4, 0.1);
         },
         reveal: () => {
-            sfx.vibrate();
+            sfx.vibrate(100);
             if (isMuted) return;
             playTone(200, 'sawtooth', 0.1, 0.05);
             setTimeout(() => playTone(400, 'sawtooth', 0.3, 0.08), 50);
         },
         vote: () => {
             playTone(300, 'triangle', 0.1, 0.05);
-            sfx.vibrate();
+            sfx.vibrate(100);
         },
         suspense: () => playTone(60, 'sine', 1.0, 0.1),
-        vibrate: () => {
+        vibrate: (ms = 100) => {
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                navigator.vibrate(100);
+                navigator.vibrate(ms);
             }
         }
     };

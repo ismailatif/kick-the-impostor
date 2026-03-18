@@ -68,7 +68,6 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
   const addPlayer = () => {
     if (players.length < 20) {
       sfx.click();
-      sfx.vibrate();
       setPlayers([...players, ""]);
     }
   };
@@ -76,7 +75,6 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
   const removePlayer = (index) => {
     if (players.length > 3) {
       sfx.click();
-      sfx.vibrate();
       const newPlayers = [...players];
       newPlayers.splice(index, 1);
       setPlayers(newPlayers);
@@ -91,7 +89,6 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
 
   const toggleCategory = (cat) => {
     sfx.click();
-    sfx.vibrate();
     if (selectedCategories.includes(cat)) {
       if (selectedCategories.length > 1) {
         setSelectedCategories(selectedCategories.filter(c => c !== cat));
@@ -105,11 +102,11 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
 
   const handleAdjustTimer = (amount) => {
     sfx.click();
-    sfx.vibrate();
     setTimerDuration(prev => Math.max(15, prev + amount));
   };
 
   const handleStart = () => {
+    sfx.vibrate(120);
     const finalPlayers = players.map((p, i) => p.trim() || `${t("setup.player")} ${i + 1}`);
 
     // Validate unique names
@@ -356,13 +353,13 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
             </h3>
             <div className="flex items-center gap-3 bg-muted rounded-xl p-1">
               <button
-                onClick={() => { sfx.click(); sfx.vibrate(); setImpostorCount(Math.max(1, impostorCount - 1)); }}
+                onClick={() => { sfx.click(); setImpostorCount(Math.max(1, impostorCount - 1)); }}
                 className="w-8 h-8 flex items-center justify-center bg-card rounded-lg shadow-sm">
                 <Minus className="w-4 h-4" />
               </button>
               <span className="w-6 text-center font-black text-lg">{impostorCount}</span>
               <button
-                onClick={() => { sfx.click(); sfx.vibrate(); setImpostorCount(Math.min(Math.floor(players.length / 3), impostorCount + 1)); }}
+                onClick={() => { sfx.click(); setImpostorCount(Math.min(Math.floor(players.length / 3), impostorCount + 1)); }}
                 className="w-8 h-8 flex items-center justify-center bg-card rounded-lg shadow-sm">
                 <Plus className="w-4 h-4" />
               </button>

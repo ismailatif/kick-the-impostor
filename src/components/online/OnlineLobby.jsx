@@ -208,7 +208,7 @@ const OnlineLobby = () => {
                                             <button
                                                 key={n}
                                                 type="button"
-                                                onClick={() => { sfx.vibrate(); handleSettingsChange({ impostorCount: n }); }}
+                                                onClick={() => { handleSettingsChange({ impostorCount: n }); }}
                                                 className={`flex-1 py-2 rounded-xl font-bold border transition-all ${
                                                     (room.settings?.impostorCount === n)
                                                         ? "bg-primary text-primary-foreground border-primary"
@@ -241,7 +241,6 @@ const OnlineLobby = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => { 
-                                                    sfx.vibrate();
                                                     const newVal = !room.settings?.hasTimer;
                                                     handleSettingsChange({ hasTimer: newVal });
                                                     if (!newVal) setIsModifyingTimer(false);

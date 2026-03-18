@@ -397,7 +397,6 @@ const GamePlay = ({ config, onEnd, onSettings }) => {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   sfx.vote();
-                  sfx.vibrate();
                   const newVotes = { ...votes, [currentPlayerIndex]: i };
                   setVotes(newVotes);
                   if (currentPlayerIndex < config.players.length - 1) {
