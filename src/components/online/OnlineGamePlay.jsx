@@ -5,7 +5,7 @@ import {
     pulseGlow, breathing, revealCard, flip, shake
 } from "@/lib/animations";
 import {
-    Eye, EyeOff, RotateCcw, Vote, Mic, User, Crown, VolumeX, Volume2, ArrowLeft, ArrowRight
+    Eye, EyeOff, RotateCcw, Vote, Mic, User, Crown, VolumeX, Volume2, ArrowLeft, ArrowRight, Home, Settings2
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
@@ -378,76 +378,104 @@ const OnlineGamePlay = ({ onEnd }) => {
         const secondaryLine = correctGuess ? t("game.impostorCaught") : t("game.impostorWon");
 
         return (
-            <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 relative overflow-hidden">
-                <motion.div animate={breathing} className={`absolute inset-0 z-0 ${correctGuess ? 'bg-success/5' : 'bg-destructive/5'}`} />
+            <div className="h-[100dvh] game-grid-bg flex flex-col items-center justify-center px-4 py-4 sm:py-8 relative overflow-hidden">
+                {/* Big Header Text - Single Line */}
+                <motion.div 
+                    initial={{ y: -30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="mb-6 flex flex-col items-center flex-shrink-0"
+                >
+                    <h1 className="text-4xl sm:text-6xl font-black text-foreground game-text-shadow tracking-tighter uppercase whitespace-nowrap">{t("game.result")}</h1>
+                </motion.div>
 
-                <motion.div variants={flip} initial="initial" animate="animate" className="game-card glass-panel w-full max-w-sm text-center relative z-10 shadow-2xl border-white/30">
-                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border-2 ${correctGuess ? 'bg-success/20 border-success/40' : 'bg-destructive/20 border-destructive/40'}`}>
-                        <Crown className={`w-12 h-12 ${correctGuess ? 'text-success' : 'text-destructive'}`} />
-                    </div>
-                    <h2 className="text-4xl font-black mb-6 drop-shadow-sm uppercase tracking-tighter text-primary">{t("game.result")}</h2>
+                {/* Main Results card - Theme-Aware */}
+                <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-full max-w-sm bg-[var(--results-card-bg)] rounded-[40px] border-[6px] border-[var(--results-card-border)] p-4 sm:p-6 shadow-xl relative flex-shrink min-h-[60dvh] flex flex-col justify-between"
+                >
+                    <div className="text-center h-full flex flex-col justify-between">
+                        <div className="flex-1 flex flex-col justify-center">
+                            <h2 className={`text-3xl sm:text-4xl font-black mb-2 leading-tight uppercase tracking-tight ${didIWin ? 'text-[#4ade80]' : 'text-[#ef4444]'}`}>
+                                {mainTitle}
+                            </h2>
+                            <p className="text-[var(--results-card-text-muted)] font-bold mb-6 sm:mb-8 text-[11px] sm:text-xs uppercase tracking-widest">
+                                {secondaryLine}
+                            </p>
+                            
+                            {/* Impostor Info */}
+                            {voteResults && !isImpostor && (
+                                <motion.div 
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="bg-[var(--results-panel-bg)] rounded-2xl py-4 px-6 border border-foreground/5 mb-8"
+                                >
+                                    <p className="text-[var(--results-card-text-muted)] text-[10px] font-black uppercase tracking-wider mb-2">{t("game.impostorWas").split(":")[0]}</p>
+                                    <div className="flex gap-2 justify-center flex-wrap">
+                                        {voteResults.impostorNames?.map((name, i) => (
+                                            <div key={i} className="flex items-center gap-2 bg-foreground/5 px-3 py-1.5 rounded-full">
+                                                <User className="w-4 h-4 text-primary" />
+                                                <span className="font-bold text-sm text-foreground">{name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
 
-                    {voteResults ? (
-                        <>
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className={`rounded-3xl p-6 mb-8 shadow-inner border-2 ${correctGuess ? "bg-success/10 border-success/30" : "bg-destructive/10 border-destructive/30"}`}
+                            {/* Secret Word */}
+                            {voteResults && (
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="bg-[var(--results-panel-bg)] rounded-2xl py-3 px-8 inline-block border border-foreground/5 self-center mb-8"
+                                >
+                                    <p className="text-[var(--results-card-text-muted)] text-[9px] font-black uppercase tracking-[0.3em] mb-1">{t("game.secretWord")}</p>
+                                    <p className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-widest">{voteResults.secretWord}</p>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Buttons Section - With Online Logic */}
+                        <div className="space-y-4 flex-shrink-0 mt-auto">
+                            <motion.button 
+                                whileHover={{ scale: 1.02, brightness: 1.1 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                    sfx.click();
+                                    if (isHost) {
+                                        emitResetGame(room.code);
+                                    } else {
+                                        resetGame();
+                                    }
+                                }}
+                                className={`w-full bg-[#4c66d6] text-white font-black text-xl sm:text-2xl py-5 rounded-2xl border-b-[6px] border-black/30 shadow-xl transition-all uppercase tracking-tight flex items-center justify-center gap-3 ${!isHost ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                             >
-                                <p className={`text-3xl font-black mb-2 ${didIWin ? "text-success" : "text-destructive"}`}>
-                                    {mainTitle}
-                                </p>
-                                <p className="text-sm font-semibold text-muted-foreground mb-3">
-                                    {secondaryLine}
-                                </p>
-                                <div className="h-px bg-white/10 w-full mb-4" />
-                                {!isImpostor && (
-                                    <p className="text-muted-foreground font-semibold text-lg italic">
-                                        {t("game.impostorWas", { names: impostorNames })}
-                                    </p>
-                                )}
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.6 }}
-                                className="bg-primary/5 border-2 border-primary/20 shadow-inner rounded-3xl p-6 mb-10"
-                            >
-                                <p className="text-xs text-muted-foreground mb-1 uppercase font-black tracking-widest">
-                                    {t("game.secretWord")}
-                                </p>
-                                <p className="text-4xl font-black text-primary drop-shadow-sm italic">
-                                    {voteResults.secretWord}
-                                </p>
-                            </motion.div>
-                        </>
-                    ) : (
-                        <p className="text-muted-foreground font-semibold mb-10">
-                            {t("game.truthReveal")}
-                        </p>
-                    )}
-
-                    <div className="flex gap-4">
-                        <motion.button
-                            whileHover={hoverScale}
-                            whileTap={tapScale}
-                            onClick={() => {
-                                sfx.click();
-                                if (isHost) {
-                                    emitResetGame(room.code);
-                                } else {
-                                    // For non-hosts, just move back to lobby state locally
-                                    // but usually the host will trigger the sync for everyone
-                                    resetGame();
-                                }
-                            }}
-                            className="flex-1 glass-button py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg text-lg"
-                        >
-                            <RotateCcw className="w-5 h-5" />
-                            {t("game.newRound")}
-                        </motion.button>
+                                <RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" />
+                                {t("game.newRound")}
+                            </motion.button>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                                <motion.button 
+                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.05)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={onEnd} 
+                                    className="bg-[var(--results-panel-bg)] border border-foreground/5 text-foreground/70 font-black text-[10px] sm:text-xs py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Home className="w-4 h-4" />
+                                    {t("game.menu")}
+                                </motion.button>
+                                <motion.button 
+                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.05)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="bg-[var(--results-panel-bg)] border border-foreground/5 text-foreground/70 font-black text-[10px] sm:text-xs py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Settings2 className="w-4 h-4" />
+                                    {t("game.settings")}
+                                </motion.button>
+                            </div>
+                        </div>
                     </div>
                 </motion.div>
             </div>

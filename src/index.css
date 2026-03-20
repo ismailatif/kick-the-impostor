@@ -67,6 +67,12 @@
 
     --bg-grad-1: hsl(var(--background));
     --bg-grad-2: #E8EBF5;
+    --grid-line-color: rgba(0, 0, 0, 0.08);
+    --text-shadow-color: rgba(0, 0, 0, 0.1);
+    --results-card-bg: hsl(var(--card));
+    --results-card-border: #4d66d6;
+    --results-card-text-muted: hsl(var(--muted-foreground));
+    --results-panel-bg: rgba(0, 0, 0, 0.05);
   }
 
   .dark {
@@ -98,6 +104,12 @@
     --success-foreground: 0 0% 100%;
 
     --border: 230 30% 25%;
+    --grid-line-color: rgba(255, 255, 255, 0.05);
+    --text-shadow-color: rgba(0, 0, 0, 0.3);
+    --results-card-bg: #131624;
+    --results-card-border: #4d66d6;
+    --results-card-text-muted: rgba(255, 255, 255, 0.5);
+    --results-panel-bg: rgba(255, 255, 255, 0.05);
     --input: 230 30% 25%;
     --ring: 230 80% 65%;
 
@@ -199,6 +211,37 @@
 
   .player-badge {
     @apply px-4 py-2 rounded-full font-bold text-sm shadow-sm border border-white/10;
+  }
+
+  .game-grid-bg {
+    background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  .game-grid-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(var(--grid-line-color) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--grid-line-color) 1.5px, transparent 1.5px);
+    background-size: 40px 40px;
+    background-position: center center;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .thick-border {
+    @apply border-[6px] border-white;
+  }
+
+  .game-shadow {
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .game-text-shadow {
+    text-shadow: 0 4px 0 var(--text-shadow-color);
   }
 }
 

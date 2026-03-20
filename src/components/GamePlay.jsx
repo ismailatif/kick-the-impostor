@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUpItem, hoverScale, tapScale, pulseGlow, shake, breathing, flip, revealCard } from "@/lib/animations";
 import { triggerPremiumCelebration, triggerErrorBurst } from "@/lib/confetti";
-import { Eye, EyeOff, ArrowLeft, ArrowRight, RotateCcw, Vote, Crown, Mic, VolumeX, Volume2, User, Sliders } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, ArrowRight, RotateCcw, Vote, Crown, Mic, VolumeX, Volume2, User, Sliders, Home, Settings2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { WORD_BANKS, getCategoryWordBankKey } from "@/i18n/translations";
@@ -11,6 +11,7 @@ const GamePlay = ({ config, onEnd, onSettings }) => {
   const [phase, setPhase] = useState("reveal"); // "reveal" | "pass" | "speaking" | "discussion" | "suspense" | "result"
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0);
   const [votes, setVotes] = useState({});
   const [timeLeft, setTimeLeft] = useState(config.hasTimer ? (config.timerDuration || 120) : null);
@@ -385,7 +386,7 @@ const GamePlay = ({ config, onEnd, onSettings }) => {
             <p className="text-sm font-black text-primary">{t("game.votingNow", { player: config.players[currentPlayerIndex] })}</p>
           </div>
         </div>
-        <div className="space-y-4 max-w-sm mx-auto">
+        <div className="space-y-4 max-w-sm mx-auto mb-10">
           {config.players.map((player, i) => (
             i !== currentPlayerIndex && (
               <motion.button
@@ -396,9 +397,49 @@ const GamePlay = ({ config, onEnd, onSettings }) => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
+                  sfx.click();
+                  setSelectedCandidateIndex(i);
+                }}
+                className={`w-full game-card flex items-center gap-4 py-4 px-6 transition-all shadow-md active:scale-95 ${isRTL ? 'flex-row-reverse' : 'flex-row'} ${
+                  selectedCandidateIndex === i
+                    ? 'border-primary ring-2 ring-primary/20 bg-primary/5 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]'
+                    : 'border-white/20 bg-card/80 hover:bg-card hover:border-primary/40'
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
+                  selectedCandidateIndex === i ? 'bg-primary border-white/20' : 'bg-primary/10 border-primary/20'
+                }`}>
+                  <User className={`w-6 h-6 ${selectedCandidateIndex === i ? 'text-white' : 'text-primary'}`} />
+                </div>
+                <div className={`flex-1 ${isRTL ? 'text-start' : 'text-start'}`}>
+                  <p className={`text-xl font-bold transition-colors ${selectedCandidateIndex === i ? 'text-primary' : 'text-foreground'}`}>{player}</p>
+                </div>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                  selectedCandidateIndex === i ? 'bg-primary text-white border-white/20 opacity-100' : 'bg-muted/20 border-white/10 opacity-50'
+                }`}>
+                  <span className="font-bold text-sm">{i + 1}</span>
+                </div>
+              </motion.button>
+            )
+          ))}
+        </div>
+
+        <AnimatePresence>
+          {selectedCandidateIndex !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-10 left-0 right-0 px-5 max-w-sm mx-auto z-50"
+            >
+              <motion.button
+                whileHover={hoverScale}
+                whileTap={tapScale}
+                onClick={() => {
                   sfx.vote();
-                  const newVotes = { ...votes, [currentPlayerIndex]: i };
+                  const newVotes = { ...votes, [currentPlayerIndex]: selectedCandidateIndex };
                   setVotes(newVotes);
+                  setSelectedCandidateIndex(null);
                   if (currentPlayerIndex < config.players.length - 1) {
                     setCurrentPlayerIndex(currentPlayerIndex + 1);
                   } else {
@@ -406,21 +447,14 @@ const GamePlay = ({ config, onEnd, onSettings }) => {
                     setPhase("result");
                   }
                 }}
-                className={`w-full game-card border-white/20 flex items-center gap-4 py-4 px-6 bg-card/80 hover:bg-card hover:border-primary/40 transition-all shadow-md active:scale-95 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}
+                className="w-full glass-button py-5 rounded-2xl font-black text-xl shadow-game flex items-center justify-center gap-3 bg-primary text-white"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                  <User className="w-6 h-6 text-primary" />
-                </div>
-                <div className={`flex-1 ${isRTL ? 'text-start' : 'text-start'}`}>
-                  <p className="text-xl font-bold">{player}</p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center border border-white/10 opacity-50">
-                  <span className="font-bold text-sm">{i + 1}</span>
-                </div>
+                <Vote className="w-6 h-6" />
+                {t("game.confirmVote")}
               </motion.button>
-            )
-          ))}
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -428,49 +462,104 @@ const GamePlay = ({ config, onEnd, onSettings }) => {
 
   // RESULT PHASE
   const separator = lang === "ar" ? "، " : ", ";
+  
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 relative overflow-hidden">
-      <motion.div animate={breathing} className={`absolute inset-0 z-0 ${correctGuess ? 'bg-success/5' : 'bg-destructive/5'}`} />
+    <div className="h-[100dvh] game-grid-bg flex flex-col items-center justify-center px-4 py-4 sm:py-8 relative overflow-hidden">
+      {/* Big Header Text - Single Line */}
+      <motion.div 
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="mb-6 flex flex-col items-center flex-shrink-0"
+      >
+        <h1 className="text-4xl sm:text-6xl font-black text-foreground game-text-shadow tracking-tighter uppercase whitespace-nowrap">{t("game.result")}</h1>
+      </motion.div>
 
-      <motion.div variants={flip} initial="initial" animate="animate" className="game-card glass-panel w-full max-w-sm text-center relative z-10 shadow-2xl border-white/30">
-        <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border-2 ${correctGuess ? 'bg-success/20 border-success/40' : 'bg-destructive/20 border-destructive/40'}`}>
-          <Crown className={`w-12 h-12 ${correctGuess ? 'text-success' : 'text-destructive'}`} />
-        </div>
-        <h2 className="text-4xl font-black mb-6 drop-shadow-sm uppercase tracking-tighter">{t("game.result")}</h2>
+      {/* Main Results card - Theme-Aware */}
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-full max-w-sm bg-[var(--results-card-bg)] rounded-[40px] border-[6px] border-[var(--results-card-border)] p-4 sm:p-6 shadow-xl relative flex-shrink min-h-[60dvh] flex flex-col justify-between"
+      >
+        <div className="text-center h-full flex flex-col justify-between">
+          <div className="flex-1 flex flex-col justify-center">
+            <h2 className={`text-3xl sm:text-4xl font-black mb-2 leading-tight uppercase tracking-tight ${
+              correctGuess ? 'text-[#4ade80]' : 'text-[#ef4444]'
+            }`}>
+              {correctGuess ? t("game.impostorCaught") : t("game.impostorWon")}
+            </h2>
+            <p className="text-[var(--results-card-text-muted)] font-bold mb-6 sm:mb-8 text-[11px] sm:text-xs uppercase tracking-widest">
+              {t("game.impostorWas").replace("{names}", "")}
+            </p>
+            
+            {/* Character Cards */}
+            <div className="flex gap-3 justify-center mb-8 sm:mb-10 flex-wrap">
+              {impostorIndices.map((idx, i) => (
+                <motion.div 
+                  key={idx}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 + (i * 0.1) }}
+                  className={`w-24 h-32 sm:w-28 sm:h-36 rounded-[28px] border-[4px] border-foreground/10 shadow-lg flex flex-col items-center justify-center relative overflow-hidden ${
+                    i % 2 === 0 ? 'bg-gradient-to-br from-[#4ade80] to-[#22c55e]' : 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6]'
+                  }`}
+                >
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 shadow-inner flex items-center justify-center mb-2 relative z-10">
+                    <User className="w-8 h-8 sm:w-9 sm:h-9 text-white drop-shadow-md" />
+                  </div>
+                  <p className="text-white font-black text-xs sm:text-sm relative z-10 px-1 truncate w-full text-center">{config.players[idx]}</p>
+                </motion.div>
+              ))}
+            </div>
 
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className={`rounded-3xl p-6 mb-8 shadow-inner border-2 ${correctGuess ? "bg-success/10 border-success/30" : "bg-destructive/10 border-destructive/30"}`}>
-          <p className={`text-3xl font-black mb-3 ${correctGuess ? "text-success" : "text-destructive"}`}>
-            {correctGuess ? t("game.impostorCaught") : t("game.impostorWon")}
-          </p>
-          <div className="h-px bg-white/10 w-full mb-4" />
-          <p className="text-muted-foreground font-semibold text-lg italic">
-            {t("game.impostorWas", { names: impostorIndices.map((i) => config.players[i]).join(separator) })}
-          </p>
-        </motion.div>
-
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1 }} className="bg-primary/5 border-2 border-primary/20 shadow-inner rounded-3xl p-6 mb-10">
-          <p className="text-xs text-muted-foreground mb-1 uppercase font-black tracking-widest">{t("game.secretWord")}</p>
-          <p className="text-4xl font-black text-primary drop-shadow-sm italic">{secretWord}</p>
-        </motion.div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-3">
-            <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => { sfx.click(); onEnd(); }} className="flex-1 bg-card border border-white/20 text-foreground py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-md text-sm">
-              <MenuIcon className="w-4 h-4" />
-              {t("game.menu")}
-            </motion.button>
-            <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => { sfx.click(); onSettings(); }} className="flex-1 bg-card border border-white/20 text-foreground py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-md text-sm">
-              <Sliders className="w-4 h-4 text-primary" />
-              {t("game.settings")}
-            </motion.button>
+            {/* Secret Word */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-[var(--results-panel-bg)] rounded-2xl py-3 px-8 inline-block border border-foreground/5 self-center mb-8"
+            >
+              <p className="text-[var(--results-card-text-muted)] text-[9px] font-black uppercase tracking-[0.3em] mb-1">{t("game.secretWord")}</p>
+              <p className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-widest">{secretWord}</p>
+            </motion.div>
           </div>
-          <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleNewRound} className="w-full glass-button py-5 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg">
-            <RotateCcw className="w-5 h-5" />
-            {t("game.newRound")}
-          </motion.button>
+
+          {/* Buttons Section - Theme-Aware secondary buttons */}
+          <div className="space-y-4 flex-shrink-0 mt-auto">
+            <motion.button 
+              whileHover={{ scale: 1.02, brightness: 1.1 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNewRound} 
+              className="w-full bg-[#4c66d6] text-white font-black text-xl sm:text-2xl py-5 rounded-2xl border-b-[6px] border-black/30 shadow-xl transition-all uppercase tracking-tight flex items-center justify-center gap-3"
+            >
+              <RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" />
+              {t("game.newRound")}
+            </motion.button>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <motion.button 
+                whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.05)" }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onEnd} 
+                className="bg-[var(--results-panel-bg)] border border-foreground/5 text-foreground/70 font-black text-[10px] sm:text-xs py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+              >
+                <Home className="w-4 h-4" />
+                {t("game.menu")}
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.05)" }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onSettings} 
+                className="bg-[var(--results-panel-bg)] border border-foreground/5 text-foreground/70 font-black text-[10px] sm:text-xs py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+              >
+                <Settings2 className="w-4 h-4" />
+                {t("game.settings")}
+              </motion.button>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>
   );
 };
+
 export default GamePlay;

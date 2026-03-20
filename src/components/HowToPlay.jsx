@@ -37,6 +37,7 @@ const HowToPlay = ({ isOpen, onClose }) => {
         className="fixed bottom-0 left-0 right-0 z-50 glass-panel max-h-[85vh] overflow-y-auto">
         <div 
           onPointerDown={(e) => dragControls.start(e)}
+          style={{ touchAction: "none" }}
           className="sticky top-0 bg-card/40 backdrop-blur-xl border-b border-white/10 pt-3 pb-2 px-6 rounded-t-3xl z-10 cursor-grab active:cursor-grabbing">
           <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4" />
           <div className="flex items-center justify-between mb-4">
