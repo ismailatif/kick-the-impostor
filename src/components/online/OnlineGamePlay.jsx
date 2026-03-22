@@ -16,14 +16,18 @@ import { useCustomToast } from "@/hooks/useCustomToast";
 const OnlineGamePlay = ({ onEnd }) => {
     const { t, isRTL } = useLanguage();
     const { sfx, playBGM, isMuted, toggleMute } = useAudio();
-    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, setReady, resetGame, submitVote, emitResetGame, leaveRoom } = useSocket();
+    const { 
+        socket, room, onlinePhase, onlineGameData, 
+        votedPlayers, voteResults, syncPhase, 
+        setReady, resetGame, submitVote, 
+        emitResetGame, leaveRoom, timeLeft, updateTimer 
+    } = useSocket();
     const toast = useCustomToast();
 
     const [isRevealed, setIsRevealed] = useState(false);
     const [holdProgress, setHoldProgress] = useState(0);
     const [localVote, setLocalVote] = useState(null);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
-    const [timeLeft, setTimeLeft] = useState(null);
 
     const audioRef = useRef(null);
     const holdTimerRef = useRef(null);
@@ -49,7 +53,6 @@ const OnlineGamePlay = ({ onEnd }) => {
     useEffect(() => {
         if (onlinePhase === 'speaking' || onlinePhase === 'discussion') {
             playBGM('suspense');
-            if (room?.settings.hasTimer) setTimeLeft(room?.settings.timerDuration || 120);
         } else if (onlinePhase === 'result') {
             playBGM('none');
             const correctGuess = voteResults?.impostorCaught ?? false;
@@ -58,19 +61,33 @@ const OnlineGamePlay = ({ onEnd }) => {
         }
     }, [onlinePhase, playBGM, room, voteResults]);
 
-    // Timer logic
+    // Timer logic: Only Host manages the timer countdown
     useEffect(() => {
-        if ((onlinePhase === 'speaking' || onlinePhase === 'discussion') && timeLeft > 0) {
+        if (!isHost || !room?.settings?.hasTimer) return;
+        if (onlinePhase !== 'speaking' && onlinePhase !== 'discussion') return;
+
+        // Initialize timer if not yet set for this phase
+        if (timeLeft === null || timeLeft === undefined) {
+             const initialTime = room.settings.timerDuration || 120;
+             updateTimer(room.code, initialTime);
+             return;
+        }
+
+        if (timeLeft > 0) {
             const timer = setInterval(() => {
-                setTimeLeft(prev => {
-                    const newTime = prev - 1;
-                    if (newTime <= 10) sfx.tick();
-                    return newTime;
-                });
+                const newTime = timeLeft - 1;
+                updateTimer(room.code, newTime);
             }, 1000);
             return () => clearInterval(timer);
         }
-    }, [onlinePhase, timeLeft, sfx]);
+    }, [isHost, onlinePhase, timeLeft, room?.code, room?.settings, updateTimer]);
+
+    // SFX Tick for all players when timer is low
+    useEffect(() => {
+        if (timeLeft !== null && timeLeft <= 10 && timeLeft > 0) {
+            sfx.tick();
+        }
+    }, [timeLeft, sfx]);
 
     const startHold = () => {
         if (isRevealed) return;

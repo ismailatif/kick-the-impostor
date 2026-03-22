@@ -12,6 +12,7 @@ export const SocketProvider = ({ children }) => {
     const [votedPlayers, setVotedPlayers] = useState([]);
     const [voteResults, setVoteResults] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
+    const [timeLeft, setTimeLeft] = useState(null);
     const toast = useCustomToast();
 
     // Auto-rejoin on mount
@@ -111,14 +112,18 @@ export const SocketProvider = ({ children }) => {
                         throw new Error('Invalid game data received');
                     }
                     setOnlineGameData(data);
-                    setOnlinePhase('reveal');
                     
-                    if (!data.rejoined) {
+                    // Handle re-entry phase/timer
+                    if (data.rejoined) {
+                        setOnlinePhase(data.phase || 'reveal');
+                        setTimeLeft(data.timeLeft);
+                        toast.success('Rejoined Game', `Welcome back, ${data.role}!`);
+                    } else {
+                        setOnlinePhase('reveal');
+                        setTimeLeft(null);
                         setTimeout(() => {
                             toast.success('Game Started', `You are the ${data.role}!`);
                         }, 0);
-                    } else {
-                        toast.success('Rejoined Game', `Welcome back, ${data.role}!`);
                     }
                 } catch (error) {
                     console.error('Error handling game-started event:', error);
@@ -129,6 +134,12 @@ export const SocketProvider = ({ children }) => {
             newSocket.on('phase-updated', (phase) => {
                 console.log('Phase updated:', phase);
                 setOnlinePhase(phase);
+                // Reset/Init timer locally when phase changes
+                setTimeLeft(null); 
+            });
+
+            newSocket.on('timer-updated', (time) => {
+                setTimeLeft(time);
             });
 
             newSocket.on('game-reset', () => {
@@ -283,6 +294,15 @@ export const SocketProvider = ({ children }) => {
         }
     }, [socket]);
 
+    const updateTimer = useCallback((code, time) => {
+        if (!socket) return;
+        try {
+            socket.emit('update-timer', { code, timeLeft: time });
+        } catch (error) {
+            console.error('Error updating timer:', error);
+        }
+    }, [socket]);
+
     const submitVote = useCallback((code, votedIndex) => {
         if (!socket) return;
         try {
@@ -328,7 +348,9 @@ export const SocketProvider = ({ children }) => {
             resetGame,
             emitResetGame,
             leaveRoom,
-            kickPlayer
+            kickPlayer,
+            timeLeft,
+            updateTimer
         }}>
             {children}
         </SocketContext.Provider>

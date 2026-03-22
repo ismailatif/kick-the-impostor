@@ -159,6 +159,8 @@ io.on('connection', (socket) => {
                         secretWord: isImpostor ? null : room.gameData.secretWord,
                         category: room.gameData.category,
                         players: room.players.map(p => p.name),
+                        phase: room.phase,
+                        timeLeft: room.timeLeft,
                         rejoined: true // Flag to help client handle UI
                     });
                 }
@@ -328,13 +330,43 @@ io.on('connection', (socket) => {
                 return emitError(socket, ErrorTypes.NOT_HOST, 'NOT_HOST');
             }
 
+            room.phase = phase;
+            // Initialize timer on server if phase has timer
+            if (phase === 'speaking' || phase === 'discussion') {
+                room.timeLeft = room.settings.timerDuration || 120;
+            } else {
+                room.timeLeft = null;
+            }
+
             io.to(code).emit('phase-updated', phase);
+            console.log(`Phase updated to ${phase} for room ${code}`);
         } catch (error) {
             console.error('Error in sync-phase:', error);
             emitError(socket, ErrorTypes.INVALID_INPUT);
         }
     });
     
+    // ================== Update Timer ==================
+    socket.on('update-timer', ({ code, timeLeft }) => {
+        try {
+            const room = rooms.get(code);
+
+            if (!room) {
+                return emitError(socket, ErrorTypes.ROOM_NOT_FOUND, 'ROOM_NOT_FOUND');
+            }
+
+            if (room.hostId !== socket.id) {
+                return emitError(socket, ErrorTypes.NOT_HOST, 'NOT_HOST');
+            }
+
+            room.timeLeft = timeLeft;
+            io.to(code).emit('timer-updated', timeLeft);
+        } catch (error) {
+            console.error('Error in update-timer:', error);
+            emitError(socket, ErrorTypes.INVALID_INPUT);
+        }
+    });
+
     // ================== Leave Room ==================
     socket.on('leave-room', ({ code }) => {
         try {
