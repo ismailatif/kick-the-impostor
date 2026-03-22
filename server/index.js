@@ -334,6 +334,71 @@ io.on('connection', (socket) => {
             emitError(socket, ErrorTypes.INVALID_INPUT);
         }
     });
+    
+    // ================== Leave Room ==================
+    socket.on('leave-room', ({ code }) => {
+        try {
+            const room = rooms.get(code);
+            if (!room) return;
+
+            const playerIndex = room.players.findIndex(p => p.id === socket.id);
+            if (playerIndex !== -1) {
+                const player = room.players[playerIndex];
+                room.players.splice(playerIndex, 1);
+                console.log(`Player ${player.name} left room ${code}`);
+                
+                socket.leave(code);
+
+                // If room empty, delete
+                if (room.players.length === 0) {
+                    rooms.delete(code);
+                    console.log(`Room ${code} deleted (empty)`);
+                } else {
+                    // Update host if host left
+                    if (room.hostId === socket.id) {
+                        const nextHost = room.players.find(p => p.connected) || room.players[0];
+                        if (nextHost) {
+                            room.hostId = nextHost.id;
+                            console.log(`New host for room ${code}: ${nextHost.name}`);
+                        }
+                    }
+                    broadcastRoomUpdate(code, room);
+                }
+            }
+        } catch (error) {
+            console.error('Error in leave-room:', error);
+        }
+    });
+
+    // ================== Kick Player ==================
+    socket.on('kick-player', ({ code, playerId }) => {
+        try {
+            const room = rooms.get(code);
+            if (!room) return emitError(socket, ErrorTypes.ROOM_NOT_FOUND);
+            if (room.hostId !== socket.id) return emitError(socket, ErrorTypes.NOT_HOST);
+            if (playerId === socket.id) return emitError(socket, 'You cannot kick yourself');
+
+            const playerIndex = room.players.findIndex(p => p.id === playerId);
+            if (playerIndex !== -1) {
+                const player = room.players[playerIndex];
+                room.players.splice(playerIndex, 1);
+                console.log(`Player ${player.name} kicked from room ${code}`);
+                
+                // Notify the kicked player
+                io.to(playerId).emit('kicked', { reason: 'Kicked by host' });
+                
+                // Make them leave the socket room
+                const kickedSocket = io.sockets.sockets.get(playerId);
+                if (kickedSocket) {
+                    kickedSocket.leave(code);
+                }
+
+                broadcastRoomUpdate(code, room);
+            }
+        } catch (error) {
+            console.error('Error in kick-player:', error);
+        }
+    });
 
     // ================== Sync Timer ==================
     socket.on('update-timer', ({ code, timeLeft }) => {
@@ -450,19 +515,25 @@ io.on('connection', (socket) => {
         for (const [code, room] of rooms.entries()) {
             const player = room.players.find(p => p.id === socket.id);
             if (player) {
-                player.connected = false;
-                console.log(`Player ${player.name} marked as disconnected in room ${code}`);
+                if (room.status === 'lobby') {
+                    // Remove player entirely if still in lobby
+                    room.players = room.players.filter(p => p.id !== socket.id);
+                } else {
+                    // Just mark as disconnected if game is in progress
+                    player.connected = false;
+                }
                 
-                // If all players are disconnected, delete the room after a grace period
-                // For now, delete immediately if everyone is gone
+                console.log(`Player ${player.name} ${room.status === 'lobby' ? 'removed' : 'marked as disconnected'} in room ${code}`);
+                
+                // If all players are disconnected/gone, delete the room
                 const anyConnected = room.players.some(p => p.connected);
-                if (!anyConnected) {
+                if (room.players.length === 0 || !anyConnected) {
                     rooms.delete(code);
-                    console.log(`Room ${code} deleted (all players disconnected)`);
+                    console.log(`Room ${code} deleted`);
                 } else {
                     // Update host if host disconnected
                     if (room.hostId === socket.id) {
-                        const nextHost = room.players.find(p => p.connected);
+                        const nextHost = room.players.find(p => p.connected) || room.players[0];
                         if (nextHost) {
                             room.hostId = nextHost.id;
                             console.log(`New host for room ${code}: ${nextHost.name}`);

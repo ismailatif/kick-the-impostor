@@ -160,6 +160,17 @@ export const SocketProvider = ({ children }) => {
                 }
             });
 
+            newSocket.on('kicked', ({ reason }) => {
+                toast.error('Kicked', reason || 'You were kicked from the room');
+                // We use a slightly modified version of leaveRoom here because we don't want to emit leave-room back to server
+                clearPersistence();
+                setRoom(null);
+                setOnlinePhase(null);
+                setOnlineGameData(null);
+                setVotedPlayers([]);
+                setVoteResults(null);
+            });
+
             // Error handling
             newSocket.on('error', (errorData) => {
                 if (typeof errorData === 'string') {
@@ -196,13 +207,21 @@ export const SocketProvider = ({ children }) => {
     }, []);
 
     const leaveRoom = useCallback(() => {
+        if (socket && room?.code) {
+            socket.emit('leave-room', { code: room.code });
+        }
         clearPersistence();
         setRoom(null);
         setOnlinePhase(null);
         setOnlineGameData(null);
         setVotedPlayers([]);
         setVoteResults(null);
-    }, [clearPersistence]);
+    }, [socket, room?.code, clearPersistence]);
+
+    const kickPlayer = useCallback((playerId) => {
+        if (!socket || !room?.code) return;
+        socket.emit('kick-player', { code: room.code, playerId });
+    }, [socket, room?.code]);
 
     // Room operations with error handling
     const createRoom = useCallback((playerName) => {
@@ -308,7 +327,8 @@ export const SocketProvider = ({ children }) => {
             submitVote,
             resetGame,
             emitResetGame,
-            leaveRoom
+            leaveRoom,
+            kickPlayer
         }}>
             {children}
         </SocketContext.Provider>

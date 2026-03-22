@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings, Lightbulb, Plus, Minus, Clock, Settings2 } from "lucide-react";
+import { Copy, Users, Play, LogOut, ShieldCheck, User as UserIcon, Link, Settings, Lightbulb, Plus, Minus, Clock, Settings2, UserX } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
 import { useSocket } from "@/hooks/useSocketHook";
@@ -40,7 +40,7 @@ const CATEGORY_STYLES = {
 const OnlineLobby = () => {
     const { t, lang } = useLanguage();
     const { sfx } = useAudio();
-    const { room, socket, updateSettings, setReady, startGame, leaveRoom } = useSocket();
+    const { room, socket, updateSettings, setReady, startGame, leaveRoom, kickPlayer } = useSocket();
     const [settingsOpen, setSettingsOpen] = useState(true);
     const [isModifyingTimer, setIsModifyingTimer] = useState(false);
 
@@ -463,7 +463,7 @@ const OnlineLobby = () => {
 
                     <div className="space-y-3">
                         {room.players.map((player) => (
-                            <motion.div key={player.id} variants={slideUpItem} className="flex items-center gap-3 p-3 bg-background border border-white/5 rounded-2xl">
+                            <motion.div key={player.id} variants={slideUpItem} className="flex items-center gap-3 p-3 bg-background border border-white/5 rounded-2xl group">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${player.ready || player.id === room.hostId ? 'bg-primary/20 border border-primary/30' : 'bg-muted border border-white/10'}`}>
                                     <UserIcon className={`w-5 h-5 ${player.ready || player.id === room.hostId ? 'text-primary' : 'text-muted-foreground'}`} />
                                 </div>
@@ -476,6 +476,20 @@ const OnlineLobby = () => {
                                         {player.id === room.hostId ? 'Host' : (player.ready ? t("setup.ready") : t("setup.notReady"))}
                                     </p>
                                 </div>
+                                {isHost && player.id !== socket?.id && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.1, color: "#ef4444" }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => {
+                                            sfx.click();
+                                            kickPlayer(player.id);
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Kick Player"
+                                    >
+                                        <UserX className="w-4 h-4" />
+                                    </motion.button>
+                                )}
                             </motion.div>
                         ))}
                     </div>
