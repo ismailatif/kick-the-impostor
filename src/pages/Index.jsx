@@ -50,6 +50,13 @@ const Index = () => {
     }
   }, [onlinePhase, room, screen]);
 
+  // Watch for room leave to return home
+  useEffect(() => {
+    if (screen === "online-lobby" && !room) {
+      setScreen("home");
+    }
+  }, [room, screen]);
+
   // Ensure lobby bgm plays when returned to home if unmuted
   useEffect(() => {
     if (screen === "home" && !isMuted) {

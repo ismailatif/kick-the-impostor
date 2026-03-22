@@ -450,6 +450,7 @@ const OnlineGamePlay = ({ onEnd }) => {
                                         resetGame();
                                     }
                                 }}
+                                disabled={!isHost}
                                 className={`w-full bg-[#4c66d6] text-white font-black text-xl sm:text-2xl py-5 rounded-2xl border-b-[6px] border-black/30 shadow-xl transition-all uppercase tracking-tight flex items-center justify-center gap-3 ${!isHost ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                             >
                                 <RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -473,6 +474,14 @@ const OnlineGamePlay = ({ onEnd }) => {
                                 <motion.button 
                                     whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.05)" }}
                                     whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        sfx.click();
+                                        if (isHost) {
+                                            emitResetGame(room.code);
+                                        } else {
+                                            resetGame();
+                                        }
+                                    }}
                                     className="bg-[var(--results-panel-bg)] border border-foreground/5 text-foreground/70 font-black text-[10px] sm:text-xs py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                                 >
                                     <Settings2 className="w-4 h-4" />
