@@ -14,6 +14,17 @@ export const SocketProvider = ({ children }) => {
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
     const toast = useCustomToast();
 
+    // Auto-rejoin on mount
+    useEffect(() => {
+        const savedCode = localStorage.getItem('happy-render-room-code');
+        const savedName = localStorage.getItem('happy-render-player-name');
+        
+        if (savedCode && savedName && socket && !room) {
+            console.log('Attempting auto-rejoin for:', savedName, 'in room:', savedCode);
+            socket.emit('join-room', { code: savedCode, playerName: savedName });
+        }
+    }, [socket, room]);
+
     useEffect(() => {
         try {
             const newSocket = io("https://imposter-production-a2ee.up.railway.app/", {
@@ -56,6 +67,14 @@ export const SocketProvider = ({ children }) => {
                         throw new Error('Invalid room data received');
                     }
                     setRoom(roomData);
+                    
+                    // Persist for re-entry
+                    const myPlayer = roomData.players.find(p => p.id === newSocket.id);
+                    if (myPlayer) {
+                        localStorage.setItem('happy-render-room-code', roomData.code);
+                        localStorage.setItem('happy-render-player-name', myPlayer.name);
+                    }
+
                     setTimeout(() => {
                         toast.success('Room Created', `Room code: ${roomData.code}`);
                     }, 0);
@@ -72,6 +91,13 @@ export const SocketProvider = ({ children }) => {
                         throw new Error('Invalid room data received in update');
                     }
                     setRoom(roomData);
+
+                    // Persist name/code if we are in the room
+                    const myPlayer = roomData.players.find(p => p.id === newSocket.id);
+                    if (myPlayer) {
+                        localStorage.setItem('happy-render-room-code', roomData.code);
+                        localStorage.setItem('happy-render-player-name', myPlayer.name);
+                    }
                 } catch (error) {
                     console.error('Error handling room-updated event:', error);
                 }
@@ -86,9 +112,14 @@ export const SocketProvider = ({ children }) => {
                     }
                     setOnlineGameData(data);
                     setOnlinePhase('reveal');
-                    setTimeout(() => {
-                        toast.success('Game Started', `You are the ${data.role}!`);
-                    }, 0);
+                    
+                    if (!data.rejoined) {
+                        setTimeout(() => {
+                            toast.success('Game Started', `You are the ${data.role}!`);
+                        }, 0);
+                    } else {
+                        toast.success('Rejoined Game', `Welcome back, ${data.role}!`);
+                    }
                 } catch (error) {
                     console.error('Error handling game-started event:', error);
                     toast.error('Error', 'Failed to process game start');
@@ -134,6 +165,9 @@ export const SocketProvider = ({ children }) => {
                 if (typeof errorData === 'string') {
                     // Legacy string errors
                     handleSocketError(errorData, toast);
+                    if (errorData.includes('Room not found')) {
+                        clearPersistence();
+                    }
                 } else if (errorData?.message) {
                     // New error object format
                     console.error('Server error:', errorData);
@@ -141,6 +175,9 @@ export const SocketProvider = ({ children }) => {
                         'Error',
                         errorData.message || 'An unexpected error occurred'
                     );
+                    if (errorData.code === 'ROOM_NOT_FOUND') {
+                        clearPersistence();
+                    }
                 } else {
                     handleSocketError(errorData, toast);
                 }
@@ -152,6 +189,20 @@ export const SocketProvider = ({ children }) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const clearPersistence = useCallback(() => {
+        localStorage.removeItem('happy-render-room-code');
+        localStorage.removeItem('happy-render-player-name');
+    }, []);
+
+    const leaveRoom = useCallback(() => {
+        clearPersistence();
+        setRoom(null);
+        setOnlinePhase(null);
+        setOnlineGameData(null);
+        setVotedPlayers([]);
+        setVoteResults(null);
+    }, [clearPersistence]);
 
     // Room operations with error handling
     const createRoom = useCallback((playerName) => {
@@ -256,7 +307,8 @@ export const SocketProvider = ({ children }) => {
             syncPhase,
             submitVote,
             resetGame,
-            emitResetGame
+            emitResetGame,
+            leaveRoom
         }}>
             {children}
         </SocketContext.Provider>

@@ -40,7 +40,7 @@ const CATEGORY_STYLES = {
 const OnlineLobby = () => {
     const { t, lang } = useLanguage();
     const { sfx } = useAudio();
-    const { room, socket, updateSettings, setReady, startGame } = useSocket();
+    const { room, socket, updateSettings, setReady, startGame, leaveRoom } = useSocket();
     const [settingsOpen, setSettingsOpen] = useState(true);
     const [isModifyingTimer, setIsModifyingTimer] = useState(false);
 
@@ -157,6 +157,18 @@ const OnlineLobby = () => {
                     {t("setup.lobby")}
                 </h1>
                 <div className="flex items-center gap-3">
+                    <motion.button
+                        whileHover={hoverScale}
+                        whileTap={tapScale}
+                        onClick={() => {
+                            sfx.click();
+                            leaveRoom();
+                        }}
+                        className="w-11 h-11 rounded-xl bg-card border border-white/20 text-destructive flex items-center justify-center shadow-sm"
+                        title={t("setup.leaveRoom") || "Leave Room"}
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </motion.button>
                     <div className="flex items-center gap-2 bg-card border border-white/10 px-4 py-2 rounded-2xl shadow-inner">
                         <span className="text-xl font-black tracking-widest text-primary">{room.code}</span>
                         <button onClick={copyCode} className="p-1 hover:bg-white/5 rounded-lg transition-colors">

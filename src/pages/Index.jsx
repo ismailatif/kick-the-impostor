@@ -29,24 +29,26 @@ const Index = () => {
 
   // Watch for room changes to switch to lobby
   useEffect(() => {
-    if (room && screen === "online-setup") {
+    if (room && (screen === "online-setup" || screen === "home" || screen === "mode-selection")) {
       setScreen("online-lobby");
     }
   }, [room, screen]);
 
   // Watch for phase changes to switch to online play
   useEffect(() => {
-    if (onlinePhase && screen === "online-lobby") {
+    if (onlinePhase && (screen === "online-lobby" || screen === "home" || screen === "online-setup" || screen === "mode-selection")) {
       setScreen("online-play");
     }
   }, [onlinePhase, screen]);
 
   // Watch for phase reset/end to return to lobby from play
   useEffect(() => {
-    if (screen === "online-play" && !onlinePhase) {
+    if (screen === "online-play" && !onlinePhase && room) {
       setScreen("online-lobby");
+    } else if (screen === "online-play" && !onlinePhase && !room) {
+      setScreen("home");
     }
-  }, [onlinePhase, screen]);
+  }, [onlinePhase, room, screen]);
 
   // Ensure lobby bgm plays when returned to home if unmuted
   useEffect(() => {

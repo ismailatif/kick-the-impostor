@@ -95,7 +95,7 @@ io.on('connection', (socket) => {
             const roomData = {
                 code,
                 hostId: socket.id,
-                players: [{ id: socket.id, name: playerName.trim(), ready: false }],
+                players: [{ id: socket.id, name: playerName.trim(), ready: false, connected: true }],
                 settings: {
                     impostorCount: 1,
                     hasTimer: true,
@@ -136,6 +136,38 @@ io.on('connection', (socket) => {
                 return emitError(socket, ErrorTypes.ROOM_NOT_FOUND, 'ROOM_NOT_FOUND');
             }
 
+            // Check if this is a rejoining player
+            const existingPlayer = room.players.find(p => p.name === playerName.trim());
+            
+            if (existingPlayer) {
+                if (existingPlayer.connected) {
+                    return emitError(socket, 'Player name already taken', 'DUPLICATE_NAME');
+                }
+                
+                // Re-connect the player
+                console.log(`Player ${playerName} rejoining room ${code}`);
+                existingPlayer.id = socket.id;
+                existingPlayer.connected = true;
+                socket.join(code);
+                
+                // If game is in progress, send the state back
+                if (room.status === 'playing' && room.gameData) {
+                    const playerIndex = room.players.indexOf(existingPlayer);
+                    const isImpostor = room.gameData.impostorIndices.includes(playerIndex);
+                    socket.emit('game-started', {
+                        role: isImpostor ? 'impostor' : 'citizen',
+                        secretWord: isImpostor ? null : room.gameData.secretWord,
+                        category: room.gameData.category,
+                        players: room.players.map(p => p.name),
+                        rejoined: true // Flag to help client handle UI
+                    });
+                }
+                
+                broadcastRoomUpdate(code, room);
+                return;
+            }
+
+            // If not rejoining, normal join rules apply
             if (room.status === 'playing') {
                 return emitError(socket, ErrorTypes.GAME_IN_PROGRESS, 'GAME_IN_PROGRESS');
             }
@@ -144,12 +176,12 @@ io.on('connection', (socket) => {
                 return emitError(socket, ErrorTypes.ROOM_FULL, 'ROOM_FULL');
             }
 
-            // Check for duplicate player names
-            if (room.players.some(p => p.name === playerName.trim())) {
-                return emitError(socket, 'Player name already taken', 'DUPLICATE_NAME');
-            }
-
-            room.players.push({ id: socket.id, name: playerName.trim(), ready: false });
+            room.players.push({ 
+                id: socket.id, 
+                name: playerName.trim(), 
+                ready: false,
+                connected: true 
+            });
             socket.join(code);
             broadcastRoomUpdate(code, room);
             console.log(`Player ${playerName} joined room ${code}`);
@@ -416,22 +448,28 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         for (const [code, room] of rooms.entries()) {
-            const playerIndex = room.players.findIndex(p => p.id === socket.id);
-            if (playerIndex !== -1) {
-                const playerName = room.players[playerIndex].name;
-                room.players.splice(playerIndex, 1);
+            const player = room.players.find(p => p.id === socket.id);
+            if (player) {
+                player.connected = false;
+                console.log(`Player ${player.name} marked as disconnected in room ${code}`);
                 
-                if (room.players.length === 0) {
+                // If all players are disconnected, delete the room after a grace period
+                // For now, delete immediately if everyone is gone
+                const anyConnected = room.players.some(p => p.connected);
+                if (!anyConnected) {
                     rooms.delete(code);
-                    console.log(`Room ${code} deleted (empty)`);
+                    console.log(`Room ${code} deleted (all players disconnected)`);
                 } else {
+                    // Update host if host disconnected
                     if (room.hostId === socket.id) {
-                        room.hostId = room.players[0].id;
-                        console.log(`New host for room ${code}: ${room.players[0].name}`);
+                        const nextHost = room.players.find(p => p.connected);
+                        if (nextHost) {
+                            room.hostId = nextHost.id;
+                            console.log(`New host for room ${code}: ${nextHost.name}`);
+                        }
                     }
                     broadcastRoomUpdate(code, room);
                 }
-                console.log(`Player ${playerName} left room ${code}`);
                 break;
             }
         }
