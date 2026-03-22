@@ -16,7 +16,7 @@ import { useCustomToast } from "@/hooks/useCustomToast";
 const OnlineGamePlay = ({ onEnd }) => {
     const { t, isRTL } = useLanguage();
     const { sfx, playBGM, isMuted, toggleMute } = useAudio();
-    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, setReady, resetGame, submitVote, emitResetGame } = useSocket();
+    const { socket, room, onlinePhase, onlineGameData, votedPlayers, voteResults, syncPhase, setReady, resetGame, submitVote, emitResetGame, leaveRoom } = useSocket();
     const toast = useCustomToast();
 
     const [isRevealed, setIsRevealed] = useState(false);
