@@ -3,8 +3,11 @@ import { io } from 'socket.io-client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { handleSocketError, ErrorTypes } from '@/lib/errorHandler';
 import { SocketContext } from '@/hooks/SocketContext';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { WORD_BANKS, getCategoryWordBankKey } from '@/i18n/translations';
 
 export const SocketProvider = ({ children }) => {
+    const { lang } = useLanguage();
     const [socket, setSocket] = useState(null);
     const [room, setRoom] = useState(null);
     const [onlinePhase, setOnlinePhase] = useState(null);
@@ -113,7 +116,16 @@ export const SocketProvider = ({ children }) => {
                     if (!data || !data.role) {
                         throw new Error('Invalid game data received');
                     }
-                    setOnlineGameData(data);
+
+                    // Resolve secret word in this player's language
+                    let secretWord = null;
+                    if (data.catKey != null && data.wordIndex != null) {
+                        const wbKey = getCategoryWordBankKey(lang, data.catKey);
+                        const words = WORD_BANKS[lang]?.[wbKey] || WORD_BANKS['en']?.[getCategoryWordBankKey('en', data.catKey)] || [];
+                        secretWord = words[data.wordIndex] ?? words[0] ?? '?';
+                    }
+
+                    setOnlineGameData({ ...data, secretWord });
                     
                     // Handle re-entry phase/timer
                     if (data.rejoined) {
@@ -157,7 +169,16 @@ export const SocketProvider = ({ children }) => {
 
             newSocket.on('vote-results', (data) => {
                 console.log('Vote results received');
-                setVoteResults(data);
+
+                // Resolve secret word in this player's language
+                let secretWord = '?';
+                if (data.catKey != null && data.wordIndex != null) {
+                    const wbKey = getCategoryWordBankKey(lang, data.catKey);
+                    const words = WORD_BANKS[lang]?.[wbKey] || WORD_BANKS['en']?.[getCategoryWordBankKey('en', data.catKey)] || [];
+                    secretWord = words[data.wordIndex] ?? words[0] ?? '?';
+                }
+
+                setVoteResults({ ...data, secretWord });
                 setOnlinePhase('result');
 
                 if (data.impostorCaught) {

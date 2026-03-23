@@ -129,10 +129,11 @@ const OnlineLobby = () => {
         const catKey = (settings.categories && settings.categories.length)
             ? settings.categories[Math.floor(Math.random() * settings.categories.length)]
             : CATEGORY_KEYS[Math.floor(Math.random() * CATEGORY_KEYS.length)];
-        const wordBankKey = getCategoryWordBankKey(lang, catKey);
-        const banks = WORD_BANKS[lang];
-        const words = banks[wordBankKey] || Object.values(banks)[0] || ["?"];
-        const secretWord = words[Math.floor(Math.random() * words.length)];
+
+        // Use English word bank to determine valid word count (same count across all languages)
+        const wordBankKeyEn = getCategoryWordBankKey('en', catKey);
+        const enWords = WORD_BANKS['en'][wordBankKeyEn] || Object.values(WORD_BANKS['en'])[0] || ['?'];
+        const wordIndex = Math.floor(Math.random() * enWords.length);
 
         const impostorIndices = [];
         const count = settings.impostorCount || 1;
@@ -144,7 +145,8 @@ const OnlineLobby = () => {
         startGame(room.code, {
             impostorCount: count,
             impostorIndices,
-            secretWord,
+            catKey,        // language-neutral category key e.g. "cat.food"
+            wordIndex,     // index into any language's word bank for this category
             category: catKey
         });
     };

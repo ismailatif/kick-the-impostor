@@ -42,8 +42,9 @@ function validateRoomCode(code) {
 
 function validateGameData(gameData) {
     if (!gameData) return false;
-    return gameData.secretWord && 
-           Array.isArray(gameData.impostorIndices) && 
+    return gameData.catKey &&
+           typeof gameData.wordIndex === 'number' &&
+           Array.isArray(gameData.impostorIndices) &&
            gameData.category;
 }
 
@@ -156,12 +157,13 @@ io.on('connection', (socket) => {
                     const isImpostor = room.gameData.impostorIndices.includes(playerIndex);
                     socket.emit('game-started', {
                         role: isImpostor ? 'impostor' : 'citizen',
-                        secretWord: isImpostor ? null : room.gameData.secretWord,
+                        catKey: isImpostor ? null : room.gameData.catKey,
+                        wordIndex: isImpostor ? null : room.gameData.wordIndex,
                         category: room.gameData.category,
                         players: room.players.map(p => p.name),
                         phase: room.phase,
                         timeLeft: room.timeLeft,
-                        rejoined: true // Flag to help client handle UI
+                        rejoined: true
                     });
 
                     // Replay chat history to the reconnecting player
@@ -278,12 +280,13 @@ io.on('connection', (socket) => {
             room.votes = {};
             room.chatMessages = []; // Fresh chat history for each match
 
-            // Send individual roles privately
+            // Send individual roles privately — word resolved client-side per language
             room.players.forEach((player, index) => {
                 const isImpostor = gameData.impostorIndices.includes(index);
                 io.to(player.id).emit('game-started', {
                     role: isImpostor ? 'impostor' : 'citizen',
-                    secretWord: isImpostor ? null : gameData.secretWord,
+                    catKey: isImpostor ? null : gameData.catKey,
+                    wordIndex: isImpostor ? null : gameData.wordIndex,
                     category: gameData.category,
                     players: room.players.map(p => p.name)
                 });
@@ -584,7 +587,8 @@ io.on('connection', (socket) => {
                     impostorNames,
                     impostorCaught,
                     players: room.players.map((p) => p.name),
-                    secretWord: room.gameData.secretWord,
+                    catKey: room.gameData.catKey,
+                    wordIndex: room.gameData.wordIndex,
                     category: room.gameData.category,
                 };
 
