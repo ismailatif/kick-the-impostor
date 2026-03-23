@@ -189,7 +189,7 @@ export const SocketProvider = ({ children }) => {
                 } else {
                     toast.error(
                         '👻 Impostors Win!',
-                        `The secret word was: ${data.secretWord}`
+                        `The secret word was: ${secretWord}`
                     );
                 }
             });
@@ -323,7 +323,7 @@ export const SocketProvider = ({ children }) => {
     const startGame = useCallback((code, gameData) => {
         if (!socket) return;
         try {
-            if (!gameData || !gameData.secretWord) return;
+            if (!gameData || !gameData.catKey) return;
             socket.emit('start-game', { code, gameData });
         } catch (error) {
             console.error('Error starting game:', error);
