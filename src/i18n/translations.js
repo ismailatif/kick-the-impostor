@@ -115,6 +115,9 @@ export const translations = {
         "game.playersVoted": "لاعبين صوّتوا",
         "game.error": "خطأ",
         "game.notEnoughPlayers": "ليس هناك عدد كافٍ من اللاعبين للمتابعة",
+        "chat.title": "الدردشة",
+        "chat.noMessages": "لا رسائل بعد. قل شيئًا! 👋",
+        "chat.placeholder": "اكتب رسالة...",
         // Language
         "lang.label": "اللغة",
     },
@@ -230,6 +233,9 @@ export const translations = {
         "game.playersVoted": "players voted",
         "game.error": "Error",
         "game.notEnoughPlayers": "Not enough players to continue",
+        "chat.title": "Chat",
+        "chat.noMessages": "No messages yet. Say something! 👋",
+        "chat.placeholder": "Type a message...",
         "lang.label": "Language",
     },
     fr: {
@@ -344,6 +350,9 @@ export const translations = {
         "game.playersVoted": "joueurs ont voté",
         "game.error": "Erreur",
         "game.notEnoughPlayers": "Pas assez de joueurs pour continuer",
+        "chat.title": "Tchat",
+        "chat.noMessages": "Aucun message encore. Dites quelque chose ! 👋",
+        "chat.placeholder": "Écrire un message...",
         "lang.label": "Langue",
     },
 };

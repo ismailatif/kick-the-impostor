@@ -327,7 +327,7 @@ const OnlineGamePlay = ({ onEnd }) => {
                     >
                         <span className="flex items-center gap-2">
                             <MessageCircle className="w-4 h-4 text-primary" />
-                            Chat
+                            {t("chat.title")}
                             {!isChatOpen && unreadCount > 0 && (
                                 <span className="bg-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
                                     {unreadCount > 99 ? '99+' : unreadCount}
@@ -352,16 +352,23 @@ const OnlineGamePlay = ({ onEnd }) => {
                                 {/* Messages list */}
                                 <div className="overflow-y-auto flex flex-col gap-2 p-3" style={{ maxHeight: '180px' }}>
                                     {messages.length === 0 ? (
-                                        <p className="text-center text-muted-foreground text-xs py-4 font-medium">No messages yet. Say something! 👋</p>
+                                        <p className="text-center text-muted-foreground text-xs py-4 font-medium">{t("chat.noMessages")}</p>
                                     ) : (
                                         messages.map((msg) => {
                                             const isMe = msg.sender === myName;
+                                            // For RTL (Arabic): flip bubble sides so own msgs are on the left
+                                            const alignSelf = isRTL
+                                                ? (isMe ? 'self-start items-start' : 'self-end items-end')
+                                                : (isMe ? 'self-end items-end' : 'self-start items-start');
+                                            const slideDir = isRTL
+                                                ? (isMe ? -20 : 20)
+                                                : (isMe ? 20 : -20);
                                             return (
                                                 <motion.div
                                                     key={msg.id || msg.timestamp}
-                                                    initial={{ opacity: 0, x: isMe ? 20 : -20 }}
+                                                    initial={{ opacity: 0, x: slideDir }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className={`flex flex-col max-w-[80%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}
+                                                    className={`flex flex-col max-w-[80%] ${alignSelf}`}
                                                 >
                                                     {!isMe && (
                                                         <span className="text-[10px] font-bold text-primary mb-0.5 px-1">{msg.sender}</span>
@@ -388,7 +395,7 @@ const OnlineGamePlay = ({ onEnd }) => {
                                         onChange={e => setChatInput(e.target.value)}
                                         onKeyDown={handleChatKeyDown}
                                         maxLength={200}
-                                        placeholder="Type a message..."
+                                        placeholder={t("chat.placeholder")}
                                         className="flex-1 bg-background/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
                                     />
                                     <motion.button
