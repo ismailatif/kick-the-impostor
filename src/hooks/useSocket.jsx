@@ -13,6 +13,8 @@ export const SocketProvider = ({ children }) => {
     const [voteResults, setVoteResults] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
     const [timeLeft, setTimeLeft] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const toast = useCustomToast();
 
     // Auto-rejoin on mount
@@ -171,6 +173,26 @@ export const SocketProvider = ({ children }) => {
                 }
             });
 
+            // Chat events
+            newSocket.on('new-message', (message) => {
+                setMessages(prev => {
+                    const updated = [...prev, message];
+                    // Keep ordered by server timestamp
+                    updated.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    return updated;
+                });
+                setUnreadCount(prev => prev + 1);
+            });
+
+            newSocket.on('chat-history', (history) => {
+                // Bulk-load history for reconnecting players (already sorted on server)
+                setMessages(history);
+            });
+
+            newSocket.on('chat-rate-limited', () => {
+                toast.warning('Too fast', 'You\'re sending messages too quickly. Please slow down.');
+            });
+
             newSocket.on('kicked', ({ reason }) => {
                 toast.error('Kicked', reason || 'You were kicked from the room');
                 // We use a slightly modified version of leaveRoom here because we don't want to emit leave-room back to server
@@ -227,6 +249,8 @@ export const SocketProvider = ({ children }) => {
         setOnlineGameData(null);
         setVotedPlayers([]);
         setVoteResults(null);
+        setMessages([]);
+        setUnreadCount(0);
     }, [socket, room?.code, clearPersistence]);
 
     const kickPlayer = useCallback((playerId) => {
@@ -318,7 +342,18 @@ export const SocketProvider = ({ children }) => {
         setOnlineGameData(null);
         setVotedPlayers([]);
         setVoteResults(null);
+        setMessages([]);
+        setUnreadCount(0);
     }, []);
+
+    const clearUnread = useCallback(() => {
+        setUnreadCount(0);
+    }, []);
+
+    const sendMessage = useCallback((code, text) => {
+        if (!socket || !text?.trim()) return;
+        socket.emit('send-message', { code, text: text.trim() });
+    }, [socket]);
 
     const emitResetGame = useCallback((code) => {
         if (!socket) return;
@@ -350,7 +385,11 @@ export const SocketProvider = ({ children }) => {
             leaveRoom,
             kickPlayer,
             timeLeft,
-            updateTimer
+            updateTimer,
+            messages,
+            unreadCount,
+            clearUnread,
+            sendMessage
         }}>
             {children}
         </SocketContext.Provider>

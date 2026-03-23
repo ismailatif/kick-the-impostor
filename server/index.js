@@ -163,6 +163,11 @@ io.on('connection', (socket) => {
                         timeLeft: room.timeLeft,
                         rejoined: true // Flag to help client handle UI
                     });
+
+                    // Replay chat history to the reconnecting player
+                    if (room.chatMessages && room.chatMessages.length > 0) {
+                        socket.emit('chat-history', room.chatMessages);
+                    }
                 }
                 
                 broadcastRoomUpdate(code, room);
@@ -271,6 +276,7 @@ io.on('connection', (socket) => {
             room.status = 'playing';
             room.gameData = gameData;
             room.votes = {};
+            room.chatMessages = []; // Fresh chat history for each match
 
             // Send individual roles privately
             room.players.forEach((player, index) => {
@@ -306,6 +312,7 @@ io.on('connection', (socket) => {
             room.status = 'lobby';
             room.gameData = null;
             room.votes = {};
+            room.chatMessages = [];
             room.players.forEach(p => p.ready = false);
 
             broadcastRoomUpdate(code, room);
@@ -449,6 +456,55 @@ io.on('connection', (socket) => {
         } catch (error) {
             console.error('Error in update-timer:', error);
             emitError(socket, ErrorTypes.INVALID_INPUT);
+        }
+    });
+
+    // ================== Chat ==================
+    const chatRateLimits = new Map(); // socketId -> [timestamps]
+
+    socket.on('send-message', ({ code, text }) => {
+        try {
+            const room = rooms.get(code);
+            if (!room) return;
+
+            // Only allow chat while game is in progress
+            if (room.status !== 'playing') return;
+
+            const player = room.players.find(p => p.id === socket.id);
+            if (!player) return;
+
+            if (!text || typeof text !== 'string') return;
+            const trimmed = text.trim().slice(0, 200);
+            if (!trimmed) return;
+
+            // Rate limit: max 3 messages per 3 seconds per socket
+            const now = Date.now();
+            const windowMs = 3000;
+            const maxMsgs = 3;
+            const timestamps = (chatRateLimits.get(socket.id) || []).filter(t => now - t < windowMs);
+            if (timestamps.length >= maxMsgs) {
+                socket.emit('chat-rate-limited', { message: 'Slow down!' });
+                return;
+            }
+            timestamps.push(now);
+            chatRateLimits.set(socket.id, timestamps);
+
+            const message = {
+                id: `${socket.id}-${now}-${Math.random().toString(36).slice(2, 7)}`,
+                senderId: socket.id,
+                sender: player.name,
+                text: trimmed,
+                timestamp: new Date(now).toISOString()
+            };
+
+            // Persist to room history (cap at 200 messages)
+            if (!room.chatMessages) room.chatMessages = [];
+            room.chatMessages.push(message);
+            if (room.chatMessages.length > 200) room.chatMessages.shift();
+
+            io.to(code).emit('new-message', message);
+        } catch (error) {
+            console.error('Error in send-message:', error);
         }
     });
 

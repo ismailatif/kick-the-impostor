@@ -5,7 +5,7 @@ import {
     pulseGlow, breathing, revealCard, flip, shake
 } from "@/lib/animations";
 import {
-    Eye, EyeOff, RotateCcw, Vote, Mic, User, Crown, VolumeX, Volume2, ArrowLeft, ArrowRight, Home, Settings2
+    Eye, EyeOff, RotateCcw, Vote, Mic, User, Crown, VolumeX, Volume2, ArrowLeft, ArrowRight, Home, Settings2, MessageCircle, Send
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAudio } from "@/hooks/useAudio";
@@ -20,7 +20,8 @@ const OnlineGamePlay = ({ onEnd }) => {
         socket, room, onlinePhase, onlineGameData, 
         votedPlayers, voteResults, syncPhase, 
         setReady, resetGame, submitVote, 
-        emitResetGame, leaveRoom, timeLeft, updateTimer 
+        emitResetGame, leaveRoom, timeLeft, updateTimer,
+        messages, sendMessage, unreadCount, clearUnread
     } = useSocket();
     const toast = useCustomToast();
 
@@ -28,9 +29,12 @@ const OnlineGamePlay = ({ onEnd }) => {
     const [holdProgress, setHoldProgress] = useState(0);
     const [localVote, setLocalVote] = useState(null);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
+    const [chatInput, setChatInput] = useState('');
+    const [isChatOpen, setIsChatOpen] = useState(true);
 
     const audioRef = useRef(null);
     const holdTimerRef = useRef(null);
+    const chatEndRef = useRef(null);
 
     const isHost = room?.hostId === socket?.id;
     const myRole = onlineGameData?.role; // 'citizen' or 'impostor'
@@ -81,6 +85,29 @@ const OnlineGamePlay = ({ onEnd }) => {
             return () => clearInterval(timer);
         }
     }, [isHost, onlinePhase, timeLeft, room?.code, room?.settings, updateTimer]);
+
+    // Auto-scroll chat to bottom when new messages arrive
+    useEffect(() => {
+        if (isChatOpen) {
+            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            clearUnread();
+        }
+    }, [messages, isChatOpen, clearUnread]);
+
+    const handleSendMessage = () => {
+        if (!chatInput.trim() || !room?.code) return;
+        sendMessage(room.code, chatInput);
+        setChatInput('');
+    };
+
+    const handleChatKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    const myName = room?.players.find(p => p.id === socket?.id)?.name;
 
     // SFX Tick for all players when timer is low
     useEffect(() => {
@@ -234,59 +261,172 @@ const OnlineGamePlay = ({ onEnd }) => {
     if (onlinePhase === "speaking" || onlinePhase === "discussion") {
         const totalTime = room?.settings?.timerDuration || 120;
         const progress = timeLeft !== null ? timeLeft / totalTime : 1;
-        const radius = 150;
+        const radius = 95;
         const circumference = 2 * Math.PI * radius;
         const strokeDashoffset = circumference * (1 - progress);
         const isUrgent = timeLeft !== null && timeLeft <= 10;
         const strokeColorClass = isUrgent ? "stroke-destructive" : "stroke-success";
 
         return (
-            <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 relative overflow-hidden">
+            <div className="min-h-screen bg-background flex flex-col items-center px-5 pt-6 pb-6 relative overflow-hidden gap-4">
                 <motion.div animate={breathing} className="absolute inset-0 bg-primary/5 z-0 pointer-events-none" />
 
-                <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={toggleMute} className="absolute top-6 end-5 w-12 h-12 rounded-xl bg-card border border-white/20 shadow-sm flex items-center justify-center z-20">
-                    {isMuted ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
-                </motion.button>
+                {/* Top bar */}
+                <div className="w-full max-w-sm flex items-center justify-between z-20 flex-shrink-0">
+                    <h2 className="text-2xl font-black text-primary uppercase tracking-tighter">
+                        {onlinePhase === 'speaking' ? t("game.speakingTime") : t("game.discussionTime")}
+                    </h2>
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={toggleMute} className="w-10 h-10 rounded-xl bg-card border border-white/20 shadow-sm flex items-center justify-center">
+                        {isMuted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-primary" />}
+                    </motion.button>
+                </div>
 
-                <h2 className="text-3xl font-black mb-8 text-primary uppercase tracking-tighter">
-                    {onlinePhase === 'speaking' ? t("game.speakingTime") : t("game.discussionTime")}
-                </h2>
-
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative w-[320px] h-[320px] flex items-center justify-center mb-8 z-10">
+                {/* Timer circle */}
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative w-[220px] h-[220px] flex items-center justify-center z-10 flex-shrink-0">
                     <div className="absolute inset-2 rounded-full glass-panel border-none shadow-game-lg z-0" />
                     {timeLeft !== null && (
-                        <svg className="absolute inset-0 w-full h-full transform -rotate-90 z-10 drop-shadow-md">
-                            <circle cx="160" cy="160" r={radius} className="stroke-muted/20 fill-none" strokeWidth="12" />
+                        <svg className="absolute inset-0 w-full h-full transform -rotate-90 z-10 drop-shadow-md" viewBox="0 0 220 220">
+                            <circle cx="110" cy="110" r={radius} className="stroke-muted/20 fill-none" strokeWidth="10" />
                             <motion.circle
-                                cx="160" cy="160" r={radius}
+                                cx="110" cy="110" r={radius}
                                 className={`${strokeColorClass} fill-none`}
-                                strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference}
+                                strokeWidth="10" strokeLinecap="round" strokeDasharray={circumference}
                                 animate={{ strokeDashoffset }}
                                 transition={{ strokeDashoffset: { duration: 1, ease: "linear" } }}
                             />
                         </svg>
                     )}
-                    <div className="relative z-20 flex flex-col items-center justify-center text-center w-full px-6">
-                        <motion.div animate={isUrgent ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : pulseGlow} transition={isUrgent ? { repeat: Infinity, duration: 0.5 } : {}} className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner ${isUrgent ? 'bg-destructive/20 border-destructive/30' : 'bg-accent/20 border-accent/30'}`}>
-                            <Mic className={`w-8 h-8 ${isUrgent ? 'text-destructive' : 'text-accent-foreground'}`} />
+                    <div className="relative z-20 flex flex-col items-center justify-center text-center px-4">
+                        <motion.div animate={isUrgent ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : pulseGlow} transition={isUrgent ? { repeat: Infinity, duration: 0.5 } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner ${isUrgent ? 'bg-destructive/20' : 'bg-accent/20'}`}>
+                            <Mic className={`w-6 h-6 ${isUrgent ? 'text-destructive' : 'text-accent-foreground'}`} />
                         </motion.div>
-                        <p className="text-xl font-bold text-muted-foreground mb-4">{t("game.discussionDesc")}</p>
                         {timeLeft !== null && (
-                            <div className={`text-5xl font-black font-mono tracking-tighter tabular-nums min-w-[140px] text-center ${isUrgent ? 'text-destructive animate-pulse' : 'text-primary'}`}>
+                            <div className={`text-4xl font-black font-mono tracking-tighter tabular-nums ${isUrgent ? 'text-destructive animate-pulse' : 'text-primary'}`}>
                                 {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                             </div>
                         )}
                     </div>
                 </motion.div>
 
+                {/* Chat Panel */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full max-w-sm flex flex-col z-10 flex-1 min-h-0"
+                    style={{ maxHeight: '320px' }}
+                >
+                    {/* Chat header */}
+                    <button
+                        onClick={() => {
+                            setIsChatOpen(o => {
+                                if (!o) clearUnread(); // clear on open
+                                return !o;
+                            });
+                        }}
+                        className="flex items-center justify-between w-full bg-card/60 backdrop-blur-md border border-white/10 rounded-t-2xl px-4 py-2 text-sm font-bold text-muted-foreground"
+                    >
+                        <span className="flex items-center gap-2">
+                            <MessageCircle className="w-4 h-4 text-primary" />
+                            Chat
+                            {!isChatOpen && unreadCount > 0 && (
+                                <span className="bg-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                            )}
+                        </span>
+                        <motion.div animate={{ rotate: isChatOpen ? 0 : 180 }}>
+                            <Send className="w-3 h-3 rotate-[-45deg]" />
+                        </motion.div>
+                    </button>
+
+                    <AnimatePresence>
+                        {isChatOpen && (
+                            <motion.div
+                                key="chat-body"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="overflow-hidden flex flex-col bg-card/40 backdrop-blur-md border-x border-white/10"
+                            >
+                                {/* Messages list */}
+                                <div className="overflow-y-auto flex flex-col gap-2 p-3" style={{ maxHeight: '180px' }}>
+                                    {messages.length === 0 ? (
+                                        <p className="text-center text-muted-foreground text-xs py-4 font-medium">No messages yet. Say something! 👋</p>
+                                    ) : (
+                                        messages.map((msg) => {
+                                            const isMe = msg.sender === myName;
+                                            return (
+                                                <motion.div
+                                                    key={msg.id || msg.timestamp}
+                                                    initial={{ opacity: 0, x: isMe ? 20 : -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className={`flex flex-col max-w-[80%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}
+                                                >
+                                                    {!isMe && (
+                                                        <span className="text-[10px] font-bold text-primary mb-0.5 px-1">{msg.sender}</span>
+                                                    )}
+                                                    <div className={`px-3 py-2 rounded-2xl text-sm font-medium leading-snug ${
+                                                        isMe
+                                                            ? 'bg-primary text-white rounded-br-sm'
+                                                            : 'bg-card border border-white/10 text-foreground rounded-bl-sm'
+                                                    }`}>
+                                                        {msg.text}
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })
+                                    )}
+                                    <div ref={chatEndRef} />
+                                </div>
+
+                                {/* Input */}
+                                <div className="flex gap-2 p-3 border-t border-white/10">
+                                    <input
+                                        type="text"
+                                        value={chatInput}
+                                        onChange={e => setChatInput(e.target.value)}
+                                        onKeyDown={handleChatKeyDown}
+                                        maxLength={200}
+                                        placeholder="Type a message..."
+                                        className="flex-1 bg-background/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+                                    />
+                                    <motion.button
+                                        whileTap={tapScale}
+                                        onClick={handleSendMessage}
+                                        disabled={!chatInput.trim()}
+                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white disabled:opacity-40 transition-opacity flex-shrink-0"
+                                    >
+                                        <Send className="w-4 h-4" />
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Chat panel bottom border */}
+                    <div
+                        className="h-0 w-full"
+                        style={{
+                            borderBottom: isChatOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                            borderLeft: isChatOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                            borderRight: isChatOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                            borderBottomLeftRadius: '16px',
+                            borderBottomRightRadius: '16px',
+                            backgroundColor: 'transparent'
+                        }}
+                    />
+                </motion.div>
+
+                {/* Host next phase button */}
                 {isHost && (
                     <motion.button
                         whileHover={hoverScale} whileTap={tapScale}
                         onClick={handleNextPhase}
-                        className="w-full max-w-sm glass-button py-5 rounded-2xl font-extrabold flex items-center justify-center gap-2 shadow-game text-xl z-10"
+                        className="w-full max-w-sm glass-button py-4 rounded-2xl font-extrabold flex items-center justify-center gap-2 shadow-game text-lg z-10 flex-shrink-0"
                     >
                         {onlinePhase === 'speaking' ? t("game.beginDiscussion") : t("game.startVoting")}
-                        <MenuIcon className="w-6 h-6" />
+                        <MenuIcon className="w-5 h-5" />
                     </motion.button>
                 )}
             </div>
