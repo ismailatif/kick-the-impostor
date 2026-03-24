@@ -38,96 +38,96 @@ export const ErrorTypes = {
     JSON_PARSE_ERROR: 'JSON_PARSE_ERROR'
 };
 
-// Error messages configuration
+// Error messages configuration (using translation keys)
 const errorMessages = {
     [ErrorTypes.NETWORK_ERROR]: {
-        title: 'Network Error',
-        description: 'Could not connect to the server. Please check your internet connection.',
+        title: 'error.network',
+        description: 'error.networkDesc',
         duration: 5000
     },
     [ErrorTypes.CONNECTION_TIMEOUT]: {
-        title: 'Connection Timeout',
-        description: 'Server took too long to respond. Please try again.',
+        title: 'error.timeout',
+        description: 'error.timeoutDesc',
         duration: 5000
     },
     [ErrorTypes.CONNECTION_REFUSED]: {
-        title: 'Connection Failed',
-        description: 'Could not connect to the server. It may be offline.',
+        title: 'error.connRefused',
+        description: 'error.connRefusedDesc',
         duration: 5000
     },
     [ErrorTypes.ROOM_NOT_FOUND]: {
-        title: 'Room Not Found',
-        description: 'The room code you entered does not exist. Please check and try again.',
+        title: 'error.roomNotFound',
+        description: 'error.roomNotFoundDesc',
         duration: 4000
     },
     [ErrorTypes.ROOM_FULL]: {
-        title: 'Room Full',
-        description: 'This room has reached its maximum player capacity (20 players).',
+        title: 'error.roomFull',
+        description: 'error.roomFullDesc',
         duration: 4000
     },
     [ErrorTypes.GAME_IN_PROGRESS]: {
-        title: 'Game In Progress',
-        description: 'The game is already in progress. Please wait for it to finish.',
+        title: 'error.gameInProgress',
+        description: 'error.gameInProgressDesc',
         duration: 4000
     },
     [ErrorTypes.INVALID_INPUT]: {
-        title: 'Invalid Input',
-        description: 'Please check your input and try again.',
+        title: 'error.invalidInput',
+        description: 'error.invalidInputDesc',
         duration: 3000
     },
     [ErrorTypes.INVALID_ROOM_CODE]: {
-        title: 'Invalid Room Code',
-        description: 'Room code must be 4 characters long (letters and numbers only).',
+        title: 'error.invalidCode',
+        description: 'error.invalidCodeDesc',
         duration: 4000
     },
     [ErrorTypes.INVALID_PLAYER_NAME]: {
-        title: 'Invalid Player Name',
-        description: 'Player name must be between 1 and 20 characters.',
+        title: 'error.invalidName',
+        description: 'error.invalidNameDesc',
         duration: 3000
     },
     [ErrorTypes.INVALID_SETTINGS]: {
-        title: 'Invalid Settings',
-        description: 'The settings you provided are invalid. Please review and try again.',
+        title: 'setup.error', // Generic setup error
+        description: 'error.invalidInputDesc',
         duration: 4000
     },
     [ErrorTypes.UNAUTHORIZED]: {
-        title: 'Unauthorized',
-        description: 'You do not have permission to perform this action.',
+        title: 'error.unauthorized',
+        description: 'error.unauthorizedDesc',
         duration: 3000
     },
     [ErrorTypes.NOT_HOST]: {
-        title: 'Permission Denied',
-        description: 'Only the host can perform this action.',
+        title: 'error.notHost',
+        description: 'error.notHostDesc',
         duration: 3000
     },
     [ErrorTypes.NOT_READY]: {
-        title: 'Not Ready',
-        description: 'All players must be ready before starting the game.',
+        title: 'error.notReady',
+        description: 'error.notReadyDesc',
         duration: 3000
     },
     [ErrorTypes.INSUFFICIENT_PLAYERS]: {
-        title: 'Insufficient Players',
-        description: 'At least 3 players are required to start the game.',
+        title: 'error.insufficientPlayers',
+        description: 'error.insufficientPlayersDesc',
         duration: 3000
     },
     [ErrorTypes.VOTE_ALREADY_CAST]: {
-        title: 'Vote Already Cast',
-        description: 'You have already cast your vote.',
+        title: 'error.voteCast',
+        description: 'error.voteCastDesc',
         duration: 3000
     },
     [ErrorTypes.INTERNAL_SERVER_ERROR]: {
-        title: 'Server Error',
-        description: 'An unexpected server error occurred. Please try again later.',
+        title: 'error.server',
+        description: 'error.serverDesc',
         duration: 5000
     },
     [ErrorTypes.SERVICE_UNAVAILABLE]: {
-        title: 'Service Unavailable',
-        description: 'The server is temporarily unavailable. Please try again later.',
+        title: 'error.server',
+        description: 'error.serverDesc',
         duration: 5000
     },
     [ErrorTypes.UNKNOWN_ERROR]: {
-        title: 'Unexpected Error',
-        description: 'Something went wrong. Please try again.',
+        title: 'error.unknown',
+        description: 'error.unknownDesc',
         duration: 5000
     }
 };
@@ -263,14 +263,19 @@ export const validatePlayerName = (name) => {
 /**
  * Error handler for socket.io events
  */
-export const handleSocketError = (error, toast) => {
+export const handleSocketError = (error, toast, t) => {
     const classified = classifyError(error);
     const message = getErrorMessage(classified.type);
 
     logError(error, 'Socket.IO Event');
 
     if (toast) {
-        toast.error(message.title, message.description);
+        if (t) {
+            toast.error(t(message.title), t(message.description));
+        } else {
+            // Fallback for safety
+            toast.error(message.title, message.description);
+        }
     }
 
     return classified;

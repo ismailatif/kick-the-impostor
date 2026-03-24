@@ -7,7 +7,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { WORD_BANKS, getCategoryWordBankKey } from '@/i18n/translations';
 
 export const SocketProvider = ({ children }) => {
-    const { lang } = useLanguage();
+    const { lang, t } = useLanguage();
     const [socket, setSocket] = useState(null);
     const [room, setRoom] = useState(null);
     const [onlinePhase, setOnlinePhase] = useState(null);
@@ -52,7 +52,7 @@ export const SocketProvider = ({ children }) => {
                 console.log('Disconnected:', reason);
                 setConnectionStatus('disconnected');
                 if (reason === 'io server disconnect') {
-                    toast.warning('Disconnected', 'You were disconnected from the server');
+                    toast.warning(t('toast.disconnected'), t('toast.disconnectedDesc'));
                 }
             });
 
@@ -60,8 +60,8 @@ export const SocketProvider = ({ children }) => {
                 console.error('Connection error:', error);
                 setConnectionStatus('error');
                 toast.error(
-                    'Connection Error',
-                    'Could not connect to the server. Retrying...'
+                    t('toast.connError'),
+                    t('toast.connErrorDesc')
                 );
             });
 
@@ -82,11 +82,11 @@ export const SocketProvider = ({ children }) => {
                     }
 
                     setTimeout(() => {
-                        toast.success('Room Created', `Room code: ${roomData.code}`);
+                        toast.success(t('toast.roomCreated'), t('toast.roomCreatedDesc', { code: roomData.code }));
                     }, 0);
                 } catch (error) {
                     console.error('Error handling room-created event:', error);
-                    toast.error('Error', 'Failed to process room creation');
+                    toast.error(t('game.error'), t('toast.roomErrorDesc'));
                 }
             });
 
@@ -131,17 +131,17 @@ export const SocketProvider = ({ children }) => {
                     if (data.rejoined) {
                         setOnlinePhase(data.phase || 'reveal');
                         setTimeLeft(data.timeLeft);
-                        toast.success('Rejoined Game', `Welcome back, ${data.role}!`);
+                        toast.success(t('toast.rejoined'), t('toast.rejoinedDesc', { role: data.role }));
                     } else {
                         setOnlinePhase('reveal');
                         setTimeLeft(null);
                         setTimeout(() => {
-                            toast.success('Game Started', `You are the ${data.role}!`);
+                            toast.success(t('toast.gameStarted'), t('toast.gameStartedDesc', { role: data.role }));
                         }, 0);
                     }
                 } catch (error) {
                     console.error('Error handling game-started event:', error);
-                    toast.error('Error', 'Failed to process game start');
+                    toast.error(t('game.error'), t('toast.gameErrorDesc'));
                 }
             });
 
@@ -183,13 +183,13 @@ export const SocketProvider = ({ children }) => {
 
                 if (data.impostorCaught) {
                     toast.success(
-                        '🎉 Citizens Win!',
-                        `The impostor(s) were: ${data.impostorNames.join(', ')}`
+                        t('toast.citizensWin'),
+                        t('toast.citizensWinDesc', { names: data.impostorNames.join(', ') })
                     );
                 } else {
                     toast.error(
-                        '👻 Impostors Win!',
-                        `The secret word was: ${secretWord}`
+                        t('toast.impostorsWin'),
+                        t('toast.impostorsWinDesc', { word: secretWord })
                     );
                 }
             });
@@ -211,11 +211,11 @@ export const SocketProvider = ({ children }) => {
             });
 
             newSocket.on('chat-rate-limited', () => {
-                toast.warning('Too fast', 'You\'re sending messages too quickly. Please slow down.');
+                toast.warning(t('toast.tooFast'), t('toast.tooFastDesc'));
             });
 
             newSocket.on('kicked', ({ reason }) => {
-                toast.error('Kicked', reason || 'You were kicked from the room');
+                toast.error(t('toast.kicked'), t('toast.kickedDesc', { reason: reason || t('toast.kickedGeneric') }));
                 // We use a slightly modified version of leaveRoom here because we don't want to emit leave-room back to server
                 clearPersistence();
                 setRoom(null);
@@ -229,7 +229,7 @@ export const SocketProvider = ({ children }) => {
             newSocket.on('error', (errorData) => {
                 if (typeof errorData === 'string') {
                     // Legacy string errors
-                    handleSocketError(errorData, toast);
+                    handleSocketError(errorData, toast, t);
                     if (errorData.includes('Room not found')) {
                         clearPersistence();
                     }
@@ -237,14 +237,14 @@ export const SocketProvider = ({ children }) => {
                     // New error object format
                     console.error('Server error:', errorData);
                     toast.error(
-                        'Error',
-                        errorData.message || 'An unexpected error occurred'
+                        t('game.error'),
+                        errorData.message || t('toast.errorGeneric')
                     );
                     if (errorData.code === 'ROOM_NOT_FOUND') {
                         clearPersistence();
                     }
                 } else {
-                    handleSocketError(errorData, toast);
+                    handleSocketError(errorData, toast, t);
                 }
             });
 

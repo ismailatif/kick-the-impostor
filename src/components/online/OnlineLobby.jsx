@@ -103,14 +103,14 @@ const OnlineLobby = () => {
     const copyCode = () => {
         copyToClipboard(room.code);
         sfx.click();
-        toast.success("Code copied!");
+        toast.success(t("toast.codeCopied"));
     };
 
     const copyInviteLink = () => {
         const link = `${window.location.origin}/kick-the-impostor/#/?joinRoom=${room.code}`;
         copyToClipboard(link);
         sfx.click();
-        toast.success("Invite link copied!");
+        toast.success(t("toast.linkCopied"));
     };
 
     const handleToggleReady = () => {
@@ -167,7 +167,7 @@ const OnlineLobby = () => {
                             leaveRoom();
                         }}
                         className="w-11 h-11 rounded-xl bg-card border border-white/20 text-destructive flex items-center justify-center shadow-sm"
-                        title={t("setup.leaveRoom") || "Leave Room"}
+                        title={t("setup.leaveRoom")}
                     >
                         <LogOut className="w-5 h-5" />
                     </motion.button>
@@ -287,7 +287,7 @@ const OnlineLobby = () => {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 className="flex items-center justify-between pt-2 border-t border-white/5"
                                             >
-                                                <span className="text-xs font-bold text-muted-foreground">{t("setup.duration") || "Duration"}</span>
+                                                <span className="text-xs font-bold text-muted-foreground">{t("setup.duration")}</span>
                                                 <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-1">
                                                     <button
                                                         type="button"
@@ -487,7 +487,7 @@ const OnlineLobby = () => {
                                             kickPlayer(player.id);
                                         }}
                                         className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                        title="Kick Player"
+                                        title={t("setup.kickPlayer")}
                                     >
                                         <UserX className="w-4 h-4" />
                                     </motion.button>
@@ -502,10 +502,10 @@ const OnlineLobby = () => {
                     <motion.div layout variants={slideUpItem} className="game-card">
                         <div className="flex items-center gap-2 mb-3">
                             <Link className="w-5 h-5 text-accent" />
-                            <h3 className="text-lg font-bold">{t("setup.inviteLink") || "Invite Link"}</h3>
+                            <h3 className="text-lg font-bold">{t("setup.inviteLink")}</h3>
                         </div>
                         <p className="text-xs text-muted-foreground mb-3">
-                            {t("setup.inviteLinkDesc") || "Share this link with friends to join your room"}
+                            {t("setup.inviteLinkDesc")}
                         </p>
                         <motion.button
                             whileHover={hoverScale}
@@ -514,7 +514,7 @@ const OnlineLobby = () => {
                             className="w-full py-3 px-4 bg-accent/10 border border-accent/30 rounded-2xl font-bold text-accent transition-all hover:bg-accent/20 flex items-center justify-center gap-2"
                         >
                             <Copy className="w-4 h-4" />
-                            {t("setup.copyInviteLink") || "Copy Invite Link"}
+                            {t("setup.copyInviteLink")}
                         </motion.button>
                     </motion.div>
                 )}

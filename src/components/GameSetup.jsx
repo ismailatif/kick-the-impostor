@@ -113,7 +113,7 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
     const uniqueNames = new Set(finalPlayers);
     if (uniqueNames.size !== finalPlayers.length) {
       sfx.error();
-      toast.error(t("setup.errorUniqueNames") || "Names must be unique");
+      toast.error(t("setup.errorUniqueNames"));
       return;
     }
 
@@ -180,7 +180,7 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
             onClick={addPlayer}
             disabled={players.length >= 20}
             className="w-full mt-4 py-3 border-2 border-dashed border-primary/30 rounded-xl text-primary font-bold flex items-center justify-center gap-2 hover:bg-primary/5 transition-all disabled:opacity-50">
-            <Plus className="w-5 h-5" /> {t("setup.addPlayer") || "Add Player"}
+            <Plus className="w-5 h-5" /> {t("setup.addPlayer")}
           </motion.button>
         </div>
 
@@ -293,7 +293,7 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
                       whileTap={tapScale}
                       onClick={() => { sfx.click(); setIsModifyingTimer(!isModifyingTimer); }}
                       className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${isModifyingTimer ? 'bg-primary border-primary text-white shadow-lg' : 'bg-card border-white/20 text-muted-foreground'}`}
-                      title={t("setup.modify") || "Modify"}
+                      title={t("setup.modify")}
                     >
                       <Settings2 className={`w-4 h-4 ${isModifyingTimer ? 'animate-spin-slow' : ''}`} />
                     </motion.button>
@@ -310,7 +310,7 @@ const GameSetup = ({ onBack, onStart, initialConfig }) => {
                     exit={{ height: 0, opacity: 0 }}
                     className="flex items-center justify-between pt-2 border-t border-white/5"
                   >
-                    <span className="text-sm font-bold text-muted-foreground">{t("setup.duration") || "Duration"}</span>
+                    <span className="text-sm font-bold text-muted-foreground">{t("setup.duration")}</span>
                     <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-1">
                       <button
                         onClick={() => handleAdjustTimer(-15)}

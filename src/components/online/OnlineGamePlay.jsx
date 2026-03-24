@@ -273,35 +273,67 @@ const OnlineGamePlay = ({ onEnd }) => {
 
                 {/* Top bar */}
                 <div className="w-full max-w-sm flex items-center justify-between z-20 flex-shrink-0">
-                    <h2 className="text-2xl font-black text-primary uppercase tracking-tighter">
-                        {onlinePhase === 'speaking' ? t("game.speakingTime") : t("game.discussionTime")}
-                    </h2>
-                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={toggleMute} className="w-10 h-10 rounded-xl bg-card border border-white/20 shadow-sm flex items-center justify-center">
+                    <div className="flex flex-col">
+                        <h2 className="text-xl font-black text-primary uppercase tracking-tight leading-none">
+                            {onlinePhase === 'speaking' ? t("game.speakingTime") : t("game.discussionTime")}
+                        </h2>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 opacity-70">
+                            {onlinePhase === 'speaking' ? 'Individual' : 'Interactive'}
+                        </span>
+                    </div>
+                    <motion.button 
+                        whileHover={hoverScale} whileTap={tapScale} 
+                        onClick={toggleMute} 
+                        className="w-10 h-10 rounded-2xl bg-card border border-white/10 shadow-sm flex items-center justify-center backdrop-blur-md"
+                    >
                         {isMuted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-primary" />}
                     </motion.button>
                 </div>
 
                 {/* Timer circle */}
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative w-[220px] h-[220px] flex items-center justify-center z-10 flex-shrink-0">
-                    <div className="absolute inset-2 rounded-full glass-panel border-none shadow-game-lg z-0" />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }} 
+                    animate={{ opacity: 1, scale: 1 }} 
+                    className="relative w-[240px] h-[240px] flex items-center justify-center z-10 flex-shrink-0"
+                >
+                    {/* Background Glow */}
+                    <div className={`absolute inset-4 rounded-full blur-[40px] transition-colors duration-1000 ${isUrgent ? 'bg-destructive/20' : 'bg-primary/20'}`} />
+                    
+                    <div className="absolute inset-4 rounded-full bg-card/40 backdrop-blur-2xl border border-white/10 shadow-2xl z-0" />
+                    
                     {timeLeft !== null && (
-                        <svg className="absolute inset-0 w-full h-full transform -rotate-90 z-10 drop-shadow-md" viewBox="0 0 220 220">
-                            <circle cx="110" cy="110" r={radius} className="stroke-muted/20 fill-none" strokeWidth="10" />
+                        <svg className="absolute inset-0 w-full h-full transform -rotate-90 z-10" viewBox="0 0 240 240">
+                            <defs>
+                                <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="hsl(var(--primary))" />
+                                    <stop offset="100%" stopColor="hsl(var(--secondary))" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="120" cy="120" r={radius} className="stroke-muted/10 fill-none" strokeWidth="12" />
                             <motion.circle
-                                cx="110" cy="110" r={radius}
-                                className={`${strokeColorClass} fill-none`}
-                                strokeWidth="10" strokeLinecap="round" strokeDasharray={circumference}
+                                cx="120" cy="120" r={radius}
+                                className="fill-none"
+                                stroke={isUrgent ? 'hsl(var(--destructive))' : 'url(#timerGradient)'}
+                                strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference}
                                 animate={{ strokeDashoffset }}
                                 transition={{ strokeDashoffset: { duration: 1, ease: "linear" } }}
                             />
                         </svg>
                     )}
+                    
                     <div className="relative z-20 flex flex-col items-center justify-center text-center px-4">
-                        <motion.div animate={isUrgent ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : pulseGlow} transition={isUrgent ? { repeat: Infinity, duration: 0.5 } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner ${isUrgent ? 'bg-destructive/20' : 'bg-accent/20'}`}>
-                            <Mic className={`w-6 h-6 ${isUrgent ? 'text-destructive' : 'text-accent-foreground'}`} />
+                        <motion.div 
+                            animate={isUrgent ? { scale: [1, 1.15, 1] } : pulseGlow} 
+                            transition={isUrgent ? { repeat: Infinity, duration: 0.5 } : {}} 
+                            className="relative w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
+                        >
+                            {(isUrgent || onlinePhase === 'speaking') && <div className="mic-pulse" />}
+                            <div className={`w-full h-full rounded-full flex items-center justify-center shadow-inner ${isUrgent ? 'bg-destructive/20' : 'bg-primary/20 backdrop-blur-md'}`}>
+                                <Mic className={`w-7 h-7 ${isUrgent ? 'text-destructive' : 'text-primary'}`} />
+                            </div>
                         </motion.div>
                         {timeLeft !== null && (
-                            <div className={`text-4xl font-black font-mono tracking-tighter tabular-nums ${isUrgent ? 'text-destructive animate-pulse' : 'text-primary'}`}>
+                            <div className={`text-5xl font-black font-mono tracking-[-0.05em] tabular-nums drop-shadow-sm ${isUrgent ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
                                 {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                             </div>
                         )}
@@ -312,31 +344,33 @@ const OnlineGamePlay = ({ onEnd }) => {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-sm flex flex-col z-10 flex-1 min-h-0"
-                    style={{ maxHeight: '320px' }}
+                    className="w-full max-w-sm flex flex-col z-10 flex-1 min-h-0 premium-glass overflow-hidden"
+                    style={{ maxHeight: '380px' }}
                 >
                     {/* Chat header */}
                     <button
                         onClick={() => {
                             setIsChatOpen(o => {
-                                if (!o) clearUnread(); // clear on open
+                                if (!o) clearUnread();
                                 return !o;
                             });
                         }}
-                        className="flex items-center justify-between w-full bg-card/60 backdrop-blur-md border border-white/10 rounded-t-2xl px-4 py-2 text-sm font-bold text-muted-foreground"
+                        className="flex items-center justify-between w-full px-5 py-4 text-sm font-black text-foreground/80 border-b border-white/5 bg-white/5"
                     >
-                        <span className="flex items-center gap-2">
-                            <MessageCircle className="w-4 h-4 text-primary" />
-                            {t("chat.title")}
+                        <span className="flex items-center gap-3">
+                            <div className="p-1.5 rounded-lg bg-primary/10">
+                                <MessageCircle className="w-4 h-4 text-primary" />
+                            </div>
+                            <span className="uppercase tracking-widest text-xs">{t("chat.title")}</span>
                             {!isChatOpen && unreadCount > 0 && (
-                                <span className="bg-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                                <motion.span 
+                                    initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                    className="bg-primary text-primary-foreground text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg"
+                                >
                                     {unreadCount > 99 ? '99+' : unreadCount}
-                                </span>
+                                </motion.span>
                             )}
                         </span>
-                        <motion.div animate={{ rotate: isChatOpen ? 0 : 180 }}>
-                            <Send className="w-3 h-3 rotate-[-45deg]" />
-                        </motion.div>
                     </button>
 
                     <AnimatePresence>
@@ -346,37 +380,35 @@ const OnlineGamePlay = ({ onEnd }) => {
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25 }}
-                                className="overflow-hidden flex flex-col bg-card/40 backdrop-blur-md border-x border-white/10"
+                                className="flex flex-col flex-1 min-h-0"
                             >
                                 {/* Messages list */}
-                                <div className="overflow-y-auto flex flex-col gap-2 p-3" style={{ maxHeight: '180px' }}>
+                                <div className="overflow-y-auto flex flex-col gap-3 p-4" style={{ maxHeight: '220px' }}>
                                     {messages.length === 0 ? (
-                                        <p className="text-center text-muted-foreground text-xs py-4 font-medium">{t("chat.noMessages")}</p>
+                                        <div className="flex flex-col items-center justify-center py-8 opacity-40">
+                                            <div className="w-12 h-12 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center mb-3">
+                                                <MessageCircle className="w-5 h-5 text-primary" />
+                                            </div>
+                                            <p className="text-center text-xs font-bold leading-relaxed max-w-[150px]">{t("chat.noMessages")}</p>
+                                        </div>
                                     ) : (
                                         messages.map((msg) => {
                                             const isMe = msg.sender === myName;
-                                            // For RTL (Arabic): flip bubble sides so own msgs are on the left
                                             const alignSelf = isRTL
                                                 ? (isMe ? 'self-start items-start' : 'self-end items-end')
                                                 : (isMe ? 'self-end items-end' : 'self-start items-start');
-                                            const slideDir = isRTL
-                                                ? (isMe ? -20 : 20)
-                                                : (isMe ? 20 : -20);
                                             return (
                                                 <motion.div
                                                     key={msg.id || msg.timestamp}
-                                                    initial={{ opacity: 0, x: slideDir }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    className={`flex flex-col max-w-[80%] ${alignSelf}`}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className={`flex flex-col max-w-[85%] ${alignSelf}`}
                                                 >
                                                     {!isMe && (
-                                                        <span className="text-[10px] font-bold text-primary mb-0.5 px-1">{msg.sender}</span>
+                                                        <span className="text-[10px] font-black text-primary/70 mb-1 px-2 uppercase tracking-tight">{msg.sender}</span>
                                                     )}
-                                                    <div className={`px-3 py-2 rounded-2xl text-sm font-medium leading-snug ${
-                                                        isMe
-                                                            ? 'bg-primary text-white rounded-br-sm'
-                                                            : 'bg-card border border-white/10 text-foreground rounded-bl-sm'
+                                                    <div className={`px-4 py-2.5 text-sm font-bold leading-snug shadow-sm ${
+                                                        isMe ? 'chat-bubble-me' : 'chat-bubble-them'
                                                     }`}>
                                                         {msg.text}
                                                     </div>
@@ -388,7 +420,7 @@ const OnlineGamePlay = ({ onEnd }) => {
                                 </div>
 
                                 {/* Input */}
-                                <div className="flex gap-2 p-3 border-t border-white/10">
+                                <div className="flex gap-2 p-3 bg-white/5 border-t border-white/5 mt-auto">
                                     <input
                                         type="text"
                                         value={chatInput}
@@ -396,13 +428,13 @@ const OnlineGamePlay = ({ onEnd }) => {
                                         onKeyDown={handleChatKeyDown}
                                         maxLength={200}
                                         placeholder={t("chat.placeholder")}
-                                        className="flex-1 bg-background/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+                                        className="flex-1 bg-background/40 border border-white/5 rounded-2xl px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all font-bold"
                                     />
                                     <motion.button
                                         whileTap={tapScale}
                                         onClick={handleSendMessage}
                                         disabled={!chatInput.trim()}
-                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white disabled:opacity-40 transition-opacity flex-shrink-0"
+                                        className="w-10 h-10 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground disabled:opacity-40 transition-all shadow-lg active:scale-90"
                                     >
                                         <Send className="w-4 h-4" />
                                     </motion.button>
@@ -410,19 +442,6 @@ const OnlineGamePlay = ({ onEnd }) => {
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-                    {/* Chat panel bottom border */}
-                    <div
-                        className="h-0 w-full"
-                        style={{
-                            borderBottom: isChatOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                            borderLeft: isChatOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                            borderRight: isChatOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                            borderBottomLeftRadius: '16px',
-                            borderBottomRightRadius: '16px',
-                            backgroundColor: 'transparent'
-                        }}
-                    />
                 </motion.div>
 
                 {/* Host next phase button */}
@@ -430,10 +449,10 @@ const OnlineGamePlay = ({ onEnd }) => {
                     <motion.button
                         whileHover={hoverScale} whileTap={tapScale}
                         onClick={handleNextPhase}
-                        className="w-full max-w-sm glass-button py-4 rounded-2xl font-extrabold flex items-center justify-center gap-2 shadow-game text-lg z-10 flex-shrink-0"
+                        className="w-full max-w-sm premium-button flex items-center justify-center gap-3 z-10 flex-shrink-0"
                     >
-                        {onlinePhase === 'speaking' ? t("game.beginDiscussion") : t("game.startVoting")}
-                        <MenuIcon className="w-5 h-5" />
+                        <span className="text-xl">{onlinePhase === 'speaking' ? t("game.beginDiscussion") : t("game.startVoting")}</span>
+                        <MenuIcon className="w-6 h-6" />
                     </motion.button>
                 )}
             </div>
